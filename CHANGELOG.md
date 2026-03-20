@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-20
+
+### Added
+
+- Docker support for running the MCP server in a container
+- `Dockerfile` and `.dockerignore` for building the server image
+- Docker build/run instructions in README
+- Docker-based integration examples for Claude Code and GitHub Copilot
+
+### Changed
+
+- Removed manual running section from README in favor of Docker-based instructions
+
 ## [1.1.1] - 2025-06-04
 
 ### Added
