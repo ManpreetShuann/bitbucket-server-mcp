@@ -16,6 +16,13 @@ cd bitbucket-mcp
 uv sync
 ```
 
+### Setup via Docker (no local Python/uv required)
+
+```bash
+cd bitbucket-mcp
+docker build -t bitbucket-mcp .
+```
+
 ## Configuration
 
 Set two environment variables (plus one optional):
@@ -32,6 +39,12 @@ Set two environment variables (plus one optional):
 BITBUCKET_URL=https://bitbucket.example.com BITBUCKET_TOKEN=your-token uv run bitbucket-mcp
 ```
 
+Or with Docker:
+
+```bash
+docker run --rm -i -e BITBUCKET_URL=https://bitbucket.example.com -e BITBUCKET_TOKEN=your-token bitbucket-mcp
+```
+
 ## Integration
 
 This server runs locally via stdio rather than as a hosted HTTP service. Running locally keeps your Bitbucket access token on your own machine, avoids exposing an authenticated API endpoint over the network, and removes the need to manage server infrastructure or TLS certificates.
@@ -39,6 +52,9 @@ This server runs locally via stdio rather than as a hosted HTTP service. Running
 ### Claude Code
 
 Add to `~/.claude.json` or project `.claude/settings.json`:
+
+<details>
+<summary>With uv</summary>
 
 ```json
 {
@@ -55,9 +71,34 @@ Add to `~/.claude.json` or project `.claude/settings.json`:
 }
 ```
 
+</details>
+
+<details>
+<summary>With Docker</summary>
+
+```json
+{
+  "mcpServers": {
+    "bitbucket": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-mcp"],
+      "env": {
+        "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
+        "BITBUCKET_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+</details>
+
 ### GitHub Copilot (VS Code)
 
 Add to `.vscode/mcp.json` in your workspace:
+
+<details>
+<summary>With uv</summary>
 
 ```json
 {
@@ -82,6 +123,37 @@ Add to `.vscode/mcp.json` in your workspace:
   ]
 }
 ```
+
+</details>
+
+<details>
+<summary>With Docker</summary>
+
+```json
+{
+  "servers": {
+    "bitbucket": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-mcp"],
+      "env": {
+        "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
+        "BITBUCKET_TOKEN": "${input:bitbucket-token}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "bitbucket-token",
+      "description": "Bitbucket Server HTTP access token",
+      "password": true
+    }
+  ]
+}
+```
+
+</details>
 
 ### OpenAI Codex
 
