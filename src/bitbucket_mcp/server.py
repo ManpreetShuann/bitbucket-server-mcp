@@ -1,0 +1,78 @@
+"""Entry point for the Bitbucket Server MCP server.
+
+Reads configuration from environment variables, validates it, wires up the
+:class:`BitbucketClient` and all tool modules, then starts the MCP server
+on stdio transport.
+
+Environment variables:
+    BITBUCKET_URL   — Base URL of the Bitbucket Server instance (required).
+    BITBUCKET_TOKEN — Personal-access / HTTP-access token (required).
+"""
+
+from __future__ import annotations
+
+import atexit
+import asyncio
+import os
+import sys
+
+from mcp.server.fastmcp import FastMCP
+
+from bitbucket_mcp.client import BitbucketClient
+from bitbucket_mcp.tools import branches, commits, files, projects, pull_requests, repositories, search
+from bitbucket_mcp.validation import ValidationError, validate_base_url
+
+
+def main() -> None:
+    # --- Environment variable validation ---
+    # Fail fast with clear error messages if required config is missing,
+    # before constructing any objects.
+    raw_url = os.environ.get("BITBUCKET_URL", "")
+    token = os.environ.get("BITBUCKET_TOKEN", "")
+
+    if not raw_url:
+        print("Error: BITBUCKET_URL environment variable is required.", file=sys.stderr)
+        sys.exit(1)
+    if not token:
+        print("Error: BITBUCKET_TOKEN environment variable is required.", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        base_url = validate_base_url(raw_url)
+    except ValidationError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    mcp = FastMCP(
+        "Bitbucket Server",
+        instructions=(
+            "MCP server for interacting with Bitbucket Server (Enterprise) REST API. "
+            "Provides tools for managing projects, repositories, branches, files, "
+            "commits, pull requests, and code search. All list operations support "
+            "pagination via start/limit parameters."
+        ),
+    )
+
+    client = BitbucketClient(base_url, token)
+    # Ensure the underlying httpx client is closed on process exit to avoid
+    # resource-leak warnings. atexit is used because the MCP stdio transport
+    # loop does not provide a shutdown hook.
+    atexit.register(lambda: asyncio.run(client.close()))
+
+    # Each tool module's register_tools() takes the shared mcp + client and
+    # uses @mcp.tool() closures to register its tools. This keeps tool
+    # definitions co-located with their domain logic.
+    projects.register_tools(mcp, client)
+    repositories.register_tools(mcp, client)
+    branches.register_tools(mcp, client)
+    files.register_tools(mcp, client)
+    commits.register_tools(mcp, client)
+    pull_requests.register_tools(mcp, client)
+    search.register_tools(mcp, client)
+
+    # Starts the MCP server on stdio transport (stdin/stdout JSON-RPC).
+    mcp.run()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,115 @@
+"""HTTP abstraction layer for the Bitbucket Server REST API.
+
+All outbound HTTP traffic flows through :class:`BitbucketClient`. Tool modules
+never construct ``httpx`` requests directly — they call methods like
+``get()``, ``post()``, or ``search()`` on the shared client instance.
+
+This keeps auth headers, base-URL handling, error mapping, and response
+parsing in one place, and makes it trivial to mock the network layer in tests.
+"""
+
+from __future__ import annotations
+
+import httpx
+
+
+class BitbucketAPIError(Exception):
+    """Structured error raised when the Bitbucket API returns a 4xx/5xx."""
+
+    def __init__(self, status_code: int, message: str, errors: list[dict] | None = None):
+        self.status_code = status_code
+        self.message = message
+        self.errors = errors or []
+        super().__init__(str(self))
+
+    def __str__(self) -> str:
+        return f"Bitbucket API Error ({self.status_code}): {self.message}"
+
+
+class BitbucketClient:
+    def __init__(self, base_url: str, token: str):
+        self.base_url = base_url.rstrip("/")
+        # Setting base_url on the httpx client means every request path is
+        # resolved relative to it, so tool modules only supply the REST path
+        # segment (e.g. "/projects/KEY/repos").
+        self._client = httpx.AsyncClient(
+            base_url=self.base_url,
+            headers={
+                # Bearer token auth — the standard for Bitbucket Server personal
+                # access tokens (HTTP access tokens).
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            timeout=httpx.Timeout(30.0),
+        )
+
+    async def get(self, path: str, params: dict | None = None) -> dict:
+        response = await self._client.get(f"/rest/api/1.0{path}", params=params)
+        return self._handle_response(response)
+
+    async def post(self, path: str, json_data: dict | None = None, params: dict | None = None) -> dict:
+        response = await self._client.post(f"/rest/api/1.0{path}", json=json_data, params=params)
+        return self._handle_response(response)
+
+    async def put(self, path: str, json_data: dict | None = None, params: dict | None = None) -> dict:
+        response = await self._client.put(f"/rest/api/1.0{path}", json=json_data, params=params)
+        return self._handle_response(response)
+
+    async def get_raw(self, path: str, params: dict | None = None) -> str:
+        """Fetch raw file content as plain text (not JSON).
+
+        Unlike ``get()``, this returns ``response.text`` directly, because the
+        ``/raw/`` endpoint serves file contents with their original encoding
+        rather than a JSON envelope.
+        """
+        response = await self._client.get(f"/rest/api/1.0{path}", params=params)
+        if response.status_code >= 400:
+            self._handle_response(response)
+        return response.text
+
+    async def search(self, params: dict) -> dict:
+        """Call the code-search API, which lives under a different base path.
+
+        Bitbucket Server's code search is a separate plugin (backed by
+        Elasticsearch) and uses ``/rest/search/latest/`` instead of the
+        standard ``/rest/api/1.0/`` prefix.
+        """
+        response = await self._client.get("/rest/search/latest/search", params=params)
+        return self._handle_response(response)
+
+    async def get_paged(self, path: str, params: dict | None = None, start: int = 0, limit: int = 25) -> dict:
+        from bitbucket_mcp.validation import clamp_limit, clamp_start
+
+        p = dict(params) if params else {}
+        p["start"] = clamp_start(start)
+        p["limit"] = clamp_limit(limit)
+        return await self.get(path, p)
+
+    def _handle_response(self, response: httpx.Response) -> dict:
+        if response.status_code >= 400:
+            # 5xx errors: return a generic message instead of leaking internal
+            # server details (stack traces, class names) to the MCP caller.
+            if response.status_code >= 500:
+                raise BitbucketAPIError(
+                    response.status_code,
+                    f"Bitbucket server error ({response.status_code}). Check server logs for details.",
+                )
+            try:
+                body = response.json()
+                errors = body.get("errors", [])
+                message = "; ".join(e.get("message", "") for e in errors) if errors else "Request failed"
+            except Exception:
+                errors = []
+                message = "Request failed"
+            raise BitbucketAPIError(response.status_code, message, errors)
+
+        # 204 No Content — return an empty dict so callers always get a dict
+        # and don't need to special-case None.
+        if response.status_code == 204:
+            return {}
+
+        return response.json()
+
+    async def close(self) -> None:
+        await self._client.aclose()
