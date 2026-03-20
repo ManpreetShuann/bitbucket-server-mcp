@@ -1,6 +1,6 @@
 [project]
 name = "bitbucket-mcp"
-version = "1.1.0"
+version = "1.1.1"
 description = "MCP server for Atlassian Bitbucket Server (Enterprise) REST API"
 requires-python = ">=3.14"
 dependencies = [
