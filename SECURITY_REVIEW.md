@@ -104,7 +104,7 @@ All MCP tool arguments pass through validators in `validation.py` **before** rea
 | `validate_pr_direction()` | `{INCOMING, OUTGOING}` | Arbitrary enum values |
 | `validate_participant_status()` | `{APPROVED, UNAPPROVED, NEEDS_WORK}` | Arbitrary enum values |
 | `validate_task_state()` | `{OPEN, RESOLVED}` | Arbitrary enum values |
-| `validate_base_url()` | Scheme in `{http, https}`, netloc present | Non-HTTP schemes, missing host |
+| `validate_base_url()` | Scheme must be `https`, netloc present | Non-HTTPS schemes, cleartext token transmission, missing host |
 
 ### Clamp functions (silent coercion — never raise)
 
@@ -173,7 +173,7 @@ All tools return `str` — either JSON-serialised data or an error message. No e
 
 ### HTTPS support
 
-The `validate_base_url()` function accepts both `https://` and `http://` schemes. HTTPS is **strongly recommended** — using HTTP transmits the Bearer token in cleartext.
+The `validate_base_url()` function **enforces HTTPS** — `http://` URLs are rejected at startup. This ensures the Bearer token is never transmitted in cleartext.
 
 ### HTTP client configuration
 
@@ -320,11 +320,9 @@ ISO 8601 timestamps, level, logger name, message. No PII or secrets.
 
 ## 10. Residual Risks & Accepted Trade-offs
 
-### HTTP support
+### ~~HTTP support~~ (Resolved)
 
-`validate_base_url()` accepts `http://` in addition to `https://`. If the operator configures an HTTP URL, the Bearer token is transmitted in cleartext. This is accepted because some internal Bitbucket deployments use HTTP behind a corporate firewall or reverse proxy.
-
-**Mitigation**: Documentation recommends HTTPS. Operators control the URL via environment variable.
+`validate_base_url()` now enforces HTTPS — `http://` URLs are rejected at startup. The Bearer token cannot be transmitted in cleartext.
 
 ### 4xx error message forwarding
 

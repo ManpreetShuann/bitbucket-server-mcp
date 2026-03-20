@@ -50,7 +50,7 @@ def validate_base_url(url: str) -> str:
     trailing slash so callers can safely append path segments.
     """
     parsed = urlparse(url)
-    if parsed.scheme not in ("https", "http"):
+    if parsed.scheme != "https":
         raise ValidationError(f"BITBUCKET_URL must use https:// (got {parsed.scheme!r})")
     if not parsed.netloc:
         raise ValidationError("BITBUCKET_URL must include a host")
