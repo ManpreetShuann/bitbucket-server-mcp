@@ -57,7 +57,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if path:
                 params["path"] = path
             result = await client.get_paged(
-                f"{_repo_path(project_key, repo_slug)}/commits", params=params, start=start, limit=limit
+                f"{_repo_path(project_key, repo_slug)}/commits",
+                params=params,
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -76,7 +79,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             validate_commit_id(commit_id)
-            result = await client.get(f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}")
+            result = await client.get(
+                f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -107,7 +112,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             params: dict = {"contextLines": clamp_context_lines(context_lines)}
             if src_path:
                 params["srcPath"] = src_path
-            result = await client.get(f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}/diff", params=params)
+            result = await client.get(
+                f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}/diff",
+                params=params,
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -134,7 +142,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         try:
             validate_commit_id(commit_id)
             result = await client.get_paged(
-                f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}/changes", start=start, limit=limit
+                f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}/changes",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:

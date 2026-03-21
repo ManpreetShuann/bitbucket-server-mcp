@@ -39,7 +39,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"]()
         url = str(route.calls[0].request.url)
         assert "state=OPEN" in url
@@ -49,7 +51,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"](state="MERGED")
         assert "state=MERGED" in str(route.calls[0].request.url)
 
@@ -57,7 +61,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"](role="AUTHOR")
         assert "role=AUTHOR" in str(route.calls[0].request.url)
 
@@ -65,7 +71,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"](order="OLDEST")
         assert "order=OLDEST" in str(route.calls[0].request.url)
 
@@ -73,7 +81,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"](closed_since=1700000000000)
         assert "closedSince=1700000000000" in str(route.calls[0].request.url)
 
@@ -81,7 +91,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"](start=10, limit=50)
         url = str(route.calls[0].request.url)
         assert "start=10" in url
@@ -91,7 +103,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(DASHBOARD_PREFIX).mock(return_value=Response(200, json=data))
+            route = router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_dashboard_pull_requests"]()
         assert "role=" not in str(route.calls[0].request.url)
 
@@ -99,7 +113,9 @@ class TestListDashboardPullRequests:
         _, tools = setup
         error_body = {"errors": [{"message": "Authentication required"}]}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(DASHBOARD_PREFIX).mock(return_value=Response(401, json=error_body))
+            router.get(DASHBOARD_PREFIX).mock(
+                return_value=Response(401, json=error_body)
+            )
             result = await tools["list_dashboard_pull_requests"]()
         assert "Error" in result
         assert "401" in result

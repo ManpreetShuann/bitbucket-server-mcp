@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Only run when CI succeeds and not on release commits (avoid infinite loops)
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):')
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bitbucket-server-mcp
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install python-semantic-release build
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # PSR determines version from conventional commits:
+      #   feat: -> minor bump (1.x.0)
+      #   fix:/perf: -> patch bump (1.0.x)
+      #   BREAKING CHANGE: -> major bump (x.0.0)
+      - name: Python Semantic Release — Determine version
+        id: semver
+        run: |
+          OUTPUT=$(semantic-release version --noop --print 2>&1) || true
+          echo "new_version=$OUTPUT" >> "$GITHUB_OUTPUT"
+          if [ -z "$OUTPUT" ]; then
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "No new release needed."
+          else
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "New version: $OUTPUT"
+          fi
+
+      - name: Python Semantic Release — Apply version & tag
+        if: steps.semver.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          semantic-release version --no-push
+
+      - name: Build package
+        if: steps.semver.outputs.released == 'true'
+        run: python -m build
+
+      - name: Verify package
+        if: steps.semver.outputs.released == 'true'
+        run: |
+          pip install twine
+          twine check dist/*
+
+      - name: Publish to PyPI
+        if: steps.semver.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Uses trusted publishing (OIDC) — no API token needed
+          # Configure at: https://pypi.org/manage/project/bitbucket-server-mcp/settings/publishing/
+          print-hash: true
+
+      - name: Create GitHub Release
+        if: steps.semver.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          semantic-release publish --no-upload
+
+      - name: Summary
+        if: steps.semver.outputs.released == 'true'
+        run: |
+          echo "## Release v${{ steps.semver.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to PyPI" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Release created" >> $GITHUB_STEP_SUMMARY
+          echo "- Install: \`pip install bitbucket-server-mcp==${{ steps.semver.outputs.new_version }}\`" >> $GITHUB_STEP_SUMMARY

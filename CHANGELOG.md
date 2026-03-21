@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Enforce HTTPS-only in `validate_base_url()` — `http://` URLs are now rejected at startup
-- Updated `SECURITY_REVIEW.md` to reflect HTTPS enforcement and resolved HTTP risk
+- Updated `SECURITY.md` to reflect HTTPS enforcement and resolved HTTP risk
 
 ## [1.2.0] - 2026-03-20
 
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `SECURITY_REVIEW.md` — comprehensive security analysis covering threat model, input validation, injection prevention, and residual risks
+- `SECURITY.md` — comprehensive security analysis covering threat model, input validation, injection prevention, and residual risks
 - `CONTRIBUTING.md` — contributor guide with PR guidelines, code style, testing patterns, and security rules
 
 ## [1.0.0] - 2025-06-03

@@ -14,4 +14,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # MCP servers communicate over stdio
-CMD ["uv", "run", "bitbucket-mcp"]
+CMD ["uv", "run", "bitbucket-server-mcp"]

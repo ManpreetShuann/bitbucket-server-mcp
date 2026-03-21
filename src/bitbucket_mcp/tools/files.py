@@ -18,7 +18,12 @@ import json
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
-from bitbucket_mcp.validation import ValidationError, validate_path, validate_project_key, validate_repo_slug
+from bitbucket_mcp.validation import (
+    ValidationError,
+    validate_path,
+    validate_project_key,
+    validate_repo_slug,
+)
 
 
 def _repo_path(project_key: str, repo_slug: str) -> str:
@@ -57,7 +62,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             api_path = f"{_repo_path(project_key, repo_slug)}/browse"
             if path:
                 api_path += f"/{path}"
-            result = await client.get_paged(api_path, params=params, start=start, limit=limit)
+            result = await client.get_paged(
+                api_path, params=params, start=start, limit=limit
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -86,7 +93,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 params["at"] = at
             # Uses get_raw() which returns plain text, because the /raw/
             # endpoint streams the file contents directly, not as JSON.
-            return await client.get_raw(f"{_repo_path(project_key, repo_slug)}/raw/{path}", params=params or None)
+            return await client.get_raw(
+                f"{_repo_path(project_key, repo_slug)}/raw/{path}",
+                params=params or None,
+            )
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -121,7 +131,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             api_path = f"{_repo_path(project_key, repo_slug)}/files"
             if path:
                 api_path += f"/{path}"
-            result = await client.get_paged(api_path, params=params, start=start, limit=limit)
+            result = await client.get_paged(
+                api_path, params=params, start=start, limit=limit
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"

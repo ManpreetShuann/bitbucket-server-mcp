@@ -21,7 +21,18 @@ import sys
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketClient
-from bitbucket_mcp.tools import attachments, branches, commits, dashboard, files, projects, pull_requests, repositories, search, users
+from bitbucket_mcp.tools import (
+    attachments,
+    branches,
+    commits,
+    dashboard,
+    files,
+    projects,
+    pull_requests,
+    repositories,
+    search,
+    users,
+)
 from bitbucket_mcp.validation import ValidationError, validate_base_url
 
 logger = logging.getLogger("bitbucket_mcp.server")
@@ -65,7 +76,9 @@ def main() -> None:
         print("Error: BITBUCKET_URL environment variable is required.", file=sys.stderr)
         sys.exit(1)
     if not token:
-        print("Error: BITBUCKET_TOKEN environment variable is required.", file=sys.stderr)
+        print(
+            "Error: BITBUCKET_TOKEN environment variable is required.", file=sys.stderr
+        )
         sys.exit(1)
 
     try:

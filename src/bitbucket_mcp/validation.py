@@ -40,6 +40,7 @@ MAX_CONTEXT_LINES = 100
 
 class ValidationError(ValueError):
     """Raised when an MCP tool argument fails validation."""
+
     pass
 
 
@@ -51,7 +52,9 @@ def validate_base_url(url: str) -> str:
     """
     parsed = urlparse(url)
     if parsed.scheme != "https":
-        raise ValidationError(f"BITBUCKET_URL must use https:// (got {parsed.scheme!r})")
+        raise ValidationError(
+            f"BITBUCKET_URL must use https:// (got {parsed.scheme!r})"
+        )
     if not parsed.netloc:
         raise ValidationError("BITBUCKET_URL must include a host")
     return url.rstrip("/")
@@ -59,13 +62,17 @@ def validate_base_url(url: str) -> str:
 
 def validate_project_key(key: str) -> str:
     if not _PROJECT_KEY_RE.match(key):
-        raise ValidationError(f"Invalid project key: {key!r}. Must be alphanumeric/underscores, 1-128 chars.")
+        raise ValidationError(
+            f"Invalid project key: {key!r}. Must be alphanumeric/underscores, 1-128 chars."
+        )
     return key
 
 
 def validate_repo_slug(slug: str) -> str:
     if not _REPO_SLUG_RE.match(slug):
-        raise ValidationError(f"Invalid repo slug: {slug!r}. Must start with alphanumeric, contain only [A-Za-z0-9._-].")
+        raise ValidationError(
+            f"Invalid repo slug: {slug!r}. Must start with alphanumeric, contain only [A-Za-z0-9._-]."
+        )
     return slug
 
 
@@ -91,7 +98,9 @@ def validate_path(path: str) -> str:
 def validate_commit_id(commit_id: str) -> str:
     """Reject non-hex commit IDs to prevent injection into URL paths."""
     if not _COMMIT_ID_RE.match(commit_id):
-        raise ValidationError(f"Invalid commit ID: {commit_id!r}. Must be a hex SHA (4-40 chars).")
+        raise ValidationError(
+            f"Invalid commit ID: {commit_id!r}. Must be a hex SHA (4-40 chars)."
+        )
     return commit_id
 
 
@@ -117,7 +126,9 @@ def validate_pr_state(state: str) -> str:
     """Validate a pull-request state filter value."""
     upper = state.upper()
     if upper not in _VALID_PR_STATES:
-        raise ValidationError(f"Invalid PR state: {state!r}. Must be one of {sorted(_VALID_PR_STATES)}.")
+        raise ValidationError(
+            f"Invalid PR state: {state!r}. Must be one of {sorted(_VALID_PR_STATES)}."
+        )
     return upper
 
 
@@ -125,7 +136,9 @@ def validate_pr_role(role: str) -> str:
     """Validate a pull-request role filter value."""
     upper = role.upper()
     if upper not in _VALID_PR_ROLES:
-        raise ValidationError(f"Invalid PR role: {role!r}. Must be one of {sorted(_VALID_PR_ROLES)}.")
+        raise ValidationError(
+            f"Invalid PR role: {role!r}. Must be one of {sorted(_VALID_PR_ROLES)}."
+        )
     return upper
 
 
@@ -133,7 +146,9 @@ def validate_pr_order(order: str) -> str:
     """Validate a pull-request ordering value."""
     upper = order.upper()
     if upper not in _VALID_PR_ORDERS:
-        raise ValidationError(f"Invalid PR order: {order!r}. Must be one of {sorted(_VALID_PR_ORDERS)}.")
+        raise ValidationError(
+            f"Invalid PR order: {order!r}. Must be one of {sorted(_VALID_PR_ORDERS)}."
+        )
     return upper
 
 
@@ -141,7 +156,9 @@ def validate_pr_direction(direction: str) -> str:
     """Validate a pull-request direction filter value."""
     upper = direction.upper()
     if upper not in _VALID_PR_DIRECTIONS:
-        raise ValidationError(f"Invalid PR direction: {direction!r}. Must be one of {sorted(_VALID_PR_DIRECTIONS)}.")
+        raise ValidationError(
+            f"Invalid PR direction: {direction!r}. Must be one of {sorted(_VALID_PR_DIRECTIONS)}."
+        )
     return upper
 
 
@@ -149,7 +166,9 @@ def validate_participant_status(status: str) -> str:
     """Validate a pull-request participant status value."""
     upper = status.upper()
     if upper not in _VALID_PARTICIPANT_STATUSES:
-        raise ValidationError(f"Invalid participant status: {status!r}. Must be one of {sorted(_VALID_PARTICIPANT_STATUSES)}.")
+        raise ValidationError(
+            f"Invalid participant status: {status!r}. Must be one of {sorted(_VALID_PARTICIPANT_STATUSES)}."
+        )
     return upper
 
 
@@ -157,13 +176,16 @@ def validate_task_state(state: str) -> str:
     """Validate a pull-request task state value."""
     upper = state.upper()
     if upper not in _VALID_TASK_STATES:
-        raise ValidationError(f"Invalid task state: {state!r}. Must be one of {sorted(_VALID_TASK_STATES)}.")
+        raise ValidationError(
+            f"Invalid task state: {state!r}. Must be one of {sorted(_VALID_TASK_STATES)}."
+        )
     return upper
 
 
 # --- Clamp functions ---
 # These silently coerce values into safe bounds rather than raising, because
 # exceeding a limit is not an error condition — it just needs capping.
+
 
 def clamp_limit(limit: int) -> int:
     """Clamp pagination limit to [1, MAX_LIMIT]."""

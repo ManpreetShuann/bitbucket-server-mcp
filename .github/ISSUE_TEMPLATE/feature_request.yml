@@ -1,0 +1,33 @@
+name: Feature Request
+description: Suggest a new tool or enhancement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem does this solve? What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the tool or feature you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you've considered.
+    validations:
+      required: false
+  - type: input
+    id: api-endpoint
+    attributes:
+      label: Bitbucket API endpoint
+      description: If this maps to a specific Bitbucket REST API endpoint, link it here.
+      placeholder: "https://developer.atlassian.com/server/bitbucket/rest/..."
+    validations:
+      required: false

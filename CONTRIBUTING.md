@@ -25,7 +25,7 @@ Thank you for your interest in contributing. This guide covers everything you ne
 
 ### Prerequisites
 
-- Python 3.14+
+- Python 3.10+
 - [uv](https://docs.astral.sh/uv/) package manager
 - A Bitbucket Server / Data Center instance (for manual testing only — automated tests use mocks)
 
@@ -33,7 +33,7 @@ Thank you for your interest in contributing. This guide covers everything you ne
 
 ```bash
 git clone <repo-url>
-cd bitbucket-mcp
+cd bitbucket-server-mcp
 uv sync                    # Install all dependencies (including dev)
 uv run pytest -v           # Run the test suite
 ```
@@ -55,7 +55,7 @@ These are only needed when running the server locally. Tests do not require them
 ### Running the server locally
 
 ```bash
-BITBUCKET_URL=https://bitbucket.example.com BITBUCKET_TOKEN=your-token uv run bitbucket-mcp
+BITBUCKET_URL=https://bitbucket.example.com BITBUCKET_TOKEN=your-token uv run bitbucket-server-mcp
 ```
 
 ### Running tests
@@ -283,6 +283,16 @@ Every tool should have tests covering:
 - Docstrings follow the Google style with an `Args:` section.
 - No global state — tools are closures over `mcp` and `client`.
 
+### Linting & Formatting
+
+This project uses [ruff](https://docs.astral.sh/ruff/) for linting and formatting. CI will reject PRs that fail these checks.
+
+```bash
+uv run ruff check src/ tests/         # Lint
+uv run ruff format --check src/ tests/ # Format check
+uv run ruff format src/ tests/         # Auto-format
+```
+
 ---
 
 ## Commit Messages
@@ -303,12 +313,14 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 |---|---|---|
 | `feat` | New tool, new functionality | Minor |
 | `fix` | Bug fix | Patch |
-| `docs` | Documentation only | Patch |
-| `chore` | Maintenance, dependency updates | Patch |
-| `refactor` | Code restructuring without behaviour change | Patch |
-| `test` | Adding or updating tests | Patch |
-| `ci` | CI/CD changes | Patch |
 | `perf` | Performance improvement | Patch |
+| `docs` | Documentation only | No release |
+| `chore` | Maintenance, dependency updates | No release |
+| `refactor` | Code restructuring without behaviour change | No release |
+| `test` | Adding or updating tests | No release |
+| `ci` | CI/CD changes | No release |
+| `style` | Code style (formatting, whitespace) | No release |
+| `build` | Build system or dependency changes | No release |
 | `BREAKING CHANGE` / `!` | Breaking change (in footer or after type) | Major |
 
 ### Examples
@@ -325,28 +337,25 @@ test: add coverage for comment inline anchors
 
 ## Versioning & Changelog
 
-This is **mandatory** for every PR.
+Versioning and changelog generation are **fully automated** via [Python Semantic Release (PSR)](https://python-semantic-release.readthedocs.io/).
 
-### Before opening a PR
+### How it works
 
-1. **Determine the version bump** from your commit messages (see table above).
-2. **Update `pyproject.toml`** — change `version = "X.Y.Z"`.
-3. **Update `CHANGELOG.md`** — add a new section at the top:
+When commits are merged to `master`, PSR analyses the conventional commit messages and automatically:
 
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
+1. Determines the version bump (`feat:` → minor, `fix:`/`perf:` → patch, `BREAKING CHANGE:` → major)
+2. Updates `version` in `pyproject.toml` and `__version__` in `src/bitbucket_mcp/__init__.py`
+3. Updates `CHANGELOG.md`
+4. Creates a git tag (e.g., `v1.4.0`)
+5. Publishes to PyPI
+6. Creates a GitHub Release
 
-### Added
-- New `my_tool` tool for doing X
+### What this means for contributors
 
-### Changed
-- Updated `other_tool` to support Y
-
-### Fixed
-- Fixed Z in `broken_tool`
-```
-
-4. **Include the version bump and changelog in the same PR** — never merge code changes without corresponding version and changelog entries.
+- **Do NOT manually bump versions** in `pyproject.toml` or `__init__.py` — PSR handles this.
+- **Do NOT manually edit `CHANGELOG.md`** — PSR generates it from commit messages.
+- **Do** write clear conventional commit messages — they become the changelog entries.
+- **Do** use `feat:` for new tools/features and `fix:` for bug fixes — these determine the version bump.
 
 ---
 
@@ -375,14 +384,13 @@ Include:
 Before requesting review, verify:
 
 - [ ] All tests pass (`uv run pytest -v`).
+- [ ] Linting passes (`uv run ruff check src/ tests/`).
 - [ ] New tools have corresponding tests covering happy path, validation, and error handling.
 - [ ] Input validation is in place for all new tool arguments (see [Input Validation](#input-validation)).
-- [ ] Version bumped in `pyproject.toml`.
-- [ ] `CHANGELOG.md` updated.
 - [ ] `README.md` tool count and inventory updated (if tools were added).
 - [ ] No deletion operations added (see [Security Rules](#security-rules)).
 - [ ] No hardcoded credentials, tokens, or secrets.
-- [ ] Commit messages follow Conventional Commits format.
+- [ ] Commit messages follow Conventional Commits format (versioning is automated by PSR).
 
 ### Review process
 
@@ -412,7 +420,7 @@ These are hard rules that apply to all contributions. PRs that violate them will
 
 8. **Path traversal protection.** File path arguments must pass through `validate_path()` before use.
 
-For a comprehensive security analysis, see [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
+For a comprehensive security analysis and vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ---
 

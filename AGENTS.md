@@ -2,16 +2,19 @@
 
 ## Project Overview
 
-MCP server for Atlassian Bitbucket Server / Data Center (Enterprise) REST API. Provides 55 tools for managing projects, repositories, branches, files, commits, pull requests, and code search. No deletion operations by design.
+MCP server for Atlassian Bitbucket Server / Data Center (Enterprise) REST API. Provides 54 tools for managing projects, repositories, branches, files, commits, pull requests, and code search. No deletion operations by design.
 
 ## Tech Stack
 
-- **Language**: Python 3.14+
+- **Language**: Python 3.10+
 - **Framework**: MCP SDK (`mcp[cli]`) with `FastMCP`
 - **HTTP Client**: `httpx` (async)
 - **Build**: Hatchling
 - **Package Manager**: `uv`
+- **Linting**: `ruff`
 - **Tests**: `pytest` + `pytest-asyncio` + `respx` (HTTP mocking)
+- **CI/CD**: GitHub Actions (CI + semantic release to PyPI)
+- **Versioning**: [Python Semantic Release](https://python-semantic-release.readthedocs.io/) (automated)
 
 ## Project Structure
 
@@ -46,32 +49,31 @@ tests/
 ## Commands
 
 ```bash
-uv sync                  # Install dependencies
-uv run bitbucket-mcp     # Run the server (requires BITBUCKET_URL + BITBUCKET_TOKEN)
-uv run pytest -v         # Run all tests
+uv sync                              # Install dependencies
+uv run bitbucket-server-mcp           # Run the server (requires BITBUCKET_URL + BITBUCKET_TOKEN)
+uv run pytest -v                     # Run all tests
 uv run pytest tests/test_projects.py -v  # Run a single test file
+uv run ruff check src/ tests/        # Lint
+uv run ruff format src/ tests/       # Format
 ```
 
 ## Rules
 
-### Versioning and Changelog (MANDATORY)
+### Versioning and Changelog (AUTOMATED)
 
-**Before every push or PR creation**, you MUST:
+Versioning is handled automatically by [Python Semantic Release (PSR)](https://python-semantic-release.readthedocs.io/). **Do NOT manually bump versions or edit CHANGELOG.md.**
 
-1. **Determine version bump** from commit messages using [Conventional Commits](https://www.conventionalcommits.org/):
-   - `fix:` → bump **patch** (e.g., 0.1.0 → 0.1.1)
-   - `feat:` → bump **minor** (e.g., 0.1.0 → 0.2.0)
-   - `BREAKING CHANGE:` or `!` after type → bump **major** (e.g., 0.1.0 → 1.0.0)
-   - Other prefixes (`docs:`, `chore:`, `refactor:`, `test:`, `ci:`) → bump **patch**
+PSR analyses conventional commit messages on `master` and automatically:
+- Bumps version in `pyproject.toml` and `src/bitbucket_mcp/__init__.py`
+- Updates `CHANGELOG.md`
+- Creates a git tag and GitHub Release
+- Publishes to PyPI
 
-2. **Update version** in `pyproject.toml` (`version = "X.Y.Z"`)
-
-3. **Update `CHANGELOG.md`**:
-   - Add a new `## [X.Y.Z] - YYYY-MM-DD` section at the top (below the header)
-   - Categorise changes under `### Added`, `### Changed`, `### Fixed`, `### Removed` as appropriate
-   - Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format
-
-4. **Include the version bump and changelog update in the same commit or PR** — never push code changes without the corresponding version and changelog entries
+Version bumps are determined by commit type:
+- `feat:` → **minor** (e.g., 1.3.0 → 1.4.0)
+- `fix:` / `perf:` → **patch** (e.g., 1.3.0 → 1.3.1)
+- `BREAKING CHANGE:` or `!` → **major** (e.g., 1.3.0 → 2.0.0)
+- `docs:`, `chore:`, `refactor:`, `test:`, `ci:` → no release
 
 ### Commit Messages
 

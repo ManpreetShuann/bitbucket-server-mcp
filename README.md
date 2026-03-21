@@ -1,27 +1,45 @@
 # Bitbucket Server MCP
 
-An MCP (Model Context Protocol) server for Atlassian Bitbucket Server / Data Center (Enterprise). Provides 55 tools for reading and writing projects, repositories, branches, files, commits, pull requests, and code search — with **no deletion operations** by design.
+[![CI](https://github.com/ManpreetShuann/bitbucket-server-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ManpreetShuann/bitbucket-server-mcp/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/bitbucket-server-mcp)](https://pypi.org/project/bitbucket-server-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/bitbucket-server-mcp)](https://pypi.org/project/bitbucket-server-mcp/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Prerequisites
+An MCP (Model Context Protocol) server for Atlassian Bitbucket Server / Data Center (Enterprise). Provides 54 tools for reading and writing projects, repositories, branches, files, commits, pull requests, and code search — with **no deletion operations** by design.
 
-- Python 3.14+
-- [uv](https://docs.astral.sh/uv/) package manager
-- Bitbucket Server 7.x+ with HTTP access tokens enabled
+## Installation
 
-## Setup
+### From PyPI (recommended)
 
 ```bash
-# Clone and install
-cd bitbucket-mcp
+pip install bitbucket-server-mcp
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv pip install bitbucket-server-mcp
+```
+
+### From source
+
+```bash
+git clone https://github.com/ManpreetShuann/bitbucket-server-mcp.git
+cd bitbucket-server-mcp
 uv sync
 ```
 
-### Setup via Docker (no local Python/uv required)
+### Via Docker (no local Python required)
 
 ```bash
-cd bitbucket-mcp
-docker build -t bitbucket-mcp .
+cd bitbucket-server-mcp
+docker build -t bitbucket-server-mcp .
 ```
+
+## Prerequisites
+
+- Python 3.10+
+- Bitbucket Server 7.x+ with HTTP access tokens enabled
 
 ## Configuration
 
@@ -49,7 +67,7 @@ Add to `~/.claude.json` or project `.claude/settings.json`:
   "mcpServers": {
     "bitbucket": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/bitbucket-mcp", "bitbucket-mcp"],
+      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "your-token-here"
@@ -69,7 +87,7 @@ Add to `~/.claude.json` or project `.claude/settings.json`:
   "mcpServers": {
     "bitbucket": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-mcp"],
+      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-server-mcp"],
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "your-token-here"
@@ -94,7 +112,7 @@ Add to `.vscode/mcp.json` in your workspace:
     "bitbucket": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/bitbucket-mcp", "bitbucket-mcp"],
+      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "${input:bitbucket-token}"
@@ -123,7 +141,7 @@ Add to `.vscode/mcp.json` in your workspace:
     "bitbucket": {
       "type": "stdio",
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-mcp"],
+      "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-server-mcp"],
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "${input:bitbucket-token}"
@@ -150,7 +168,7 @@ Add to `~/.codex/config.toml`:
 ```toml
 [mcp_servers.bitbucket]
 command = "uv"
-args = ["run", "--directory", "/path/to/bitbucket-mcp", "bitbucket-mcp"]
+args = ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"]
 
 [mcp_servers.bitbucket.env]
 BITBUCKET_URL = "https://bitbucket.yourcompany.com"
@@ -163,10 +181,10 @@ Or via CLI:
 codex mcp add bitbucket \
   --env BITBUCKET_URL=https://bitbucket.yourcompany.com \
   --env BITBUCKET_TOKEN=your-token-here \
-  -- uv run --directory /path/to/bitbucket-mcp bitbucket-mcp
+  -- uv run --directory /path/to/bitbucket-server-mcp bitbucket-server-mcp
 ```
 
-## Tools (55 total)
+## Tools (54 total)
 
 ### Projects
 | Tool | Description |
@@ -262,12 +280,27 @@ codex mcp add bitbucket \
 | `get_attachment_metadata` | Get attachment metadata |
 | `save_attachment_metadata` | Create or update attachment metadata |
 
-## Running Tests
+## Development
 
 ```bash
-uv run pytest -v
+git clone https://github.com/ManpreetShuann/bitbucket-server-mcp.git
+cd bitbucket-server-mcp
+uv sync                # Install all dependencies (including dev)
+uv run pytest -v       # Run tests
+uv run ruff check src/ tests/   # Lint
+uv run ruff format src/ tests/  # Format
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines.
 
 ## Pagination
 
 All list tools accept `start` (default 0) and `limit` (default 25) parameters. Responses include `isLastPage` and `nextPageStart` for fetching subsequent pages.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for our security policy and vulnerability reporting instructions.
+
+## License
+
+[MIT](LICENSE)

@@ -26,7 +26,9 @@ class TestListRepositories:
         _, tools = setup
         data = paged_response([SAMPLE_REPO])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get("/rest/api/1.0/projects/PROJ/repos").mock(return_value=Response(200, json=data))
+            router.get("/rest/api/1.0/projects/PROJ/repos").mock(
+                return_value=Response(200, json=data)
+            )
             result = await tools["list_repositories"](project_key="PROJ")
         parsed = json.loads(result)
         assert parsed["values"][0]["slug"] == "my-repo"
@@ -39,7 +41,9 @@ class TestGetRepository:
             router.get("/rest/api/1.0/projects/PROJ/repos/my-repo").mock(
                 return_value=Response(200, json=SAMPLE_REPO)
             )
-            result = await tools["get_repository"](project_key="PROJ", repo_slug="my-repo")
+            result = await tools["get_repository"](
+                project_key="PROJ", repo_slug="my-repo"
+            )
         parsed = json.loads(result)
         assert parsed["slug"] == "my-repo"
 
@@ -66,7 +70,11 @@ class TestCreateRepository:
         _, tools = setup
         error_body = {"errors": [{"message": "Repository already exists"}]}
         with respx.mock(base_url=BASE_URL) as router:
-            router.post("/rest/api/1.0/projects/PROJ/repos").mock(return_value=Response(409, json=error_body))
-            result = await tools["create_repository"](project_key="PROJ", name="my-repo")
+            router.post("/rest/api/1.0/projects/PROJ/repos").mock(
+                return_value=Response(409, json=error_body)
+            )
+            result = await tools["create_repository"](
+                project_key="PROJ", name="my-repo"
+            )
         assert "Error" in result
         assert "409" in result

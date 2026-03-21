@@ -30,13 +30,19 @@ class TestGetAttachment:
     async def test_returns_content(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{ATTACH_PREFIX}/42").mock(return_value=Response(200, text="file content here"))
-            result = await tools["get_attachment"](project_key="PROJ", repo_slug="my-repo", attachment_id=42)
+            router.get(f"{ATTACH_PREFIX}/42").mock(
+                return_value=Response(200, text="file content here")
+            )
+            result = await tools["get_attachment"](
+                project_key="PROJ", repo_slug="my-repo", attachment_id=42
+            )
         assert result == "file content here"
 
     async def test_rejects_negative_id(self, setup):
         _, tools = setup
-        result = await tools["get_attachment"](project_key="PROJ", repo_slug="my-repo", attachment_id=-1)
+        result = await tools["get_attachment"](
+            project_key="PROJ", repo_slug="my-repo", attachment_id=-1
+        )
         assert "Error" in result
         assert "positive integer" in result
 
@@ -46,8 +52,12 @@ class TestGetAttachmentMetadata:
         _, tools = setup
         meta = {"description": "test file", "tags": ["important"]}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{ATTACH_PREFIX}/42/metadata").mock(return_value=Response(200, json=meta))
-            result = await tools["get_attachment_metadata"](project_key="PROJ", repo_slug="my-repo", attachment_id=42)
+            router.get(f"{ATTACH_PREFIX}/42/metadata").mock(
+                return_value=Response(200, json=meta)
+            )
+            result = await tools["get_attachment_metadata"](
+                project_key="PROJ", repo_slug="my-repo", attachment_id=42
+            )
         parsed = json.loads(result)
         assert parsed["description"] == "test file"
 
@@ -57,9 +67,13 @@ class TestSaveAttachmentMetadata:
         _, tools = setup
         meta = {"description": "updated"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{ATTACH_PREFIX}/42/metadata").mock(return_value=Response(200, json=meta))
+            route = router.put(f"{ATTACH_PREFIX}/42/metadata").mock(
+                return_value=Response(200, json=meta)
+            )
             result = await tools["save_attachment_metadata"](
-                project_key="PROJ", repo_slug="my-repo", attachment_id=42,
+                project_key="PROJ",
+                repo_slug="my-repo",
+                attachment_id=42,
                 metadata='{"description": "updated"}',
             )
         parsed = json.loads(result)
@@ -70,7 +84,10 @@ class TestSaveAttachmentMetadata:
     async def test_rejects_invalid_json(self, setup):
         _, tools = setup
         result = await tools["save_attachment_metadata"](
-            project_key="PROJ", repo_slug="my-repo", attachment_id=42, metadata="not json"
+            project_key="PROJ",
+            repo_slug="my-repo",
+            attachment_id=42,
+            metadata="not json",
         )
         assert "Error" in result
         assert "valid JSON" in result

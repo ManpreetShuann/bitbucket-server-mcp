@@ -9,7 +9,16 @@ from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketClient
 from bitbucket_mcp.tools.pull_requests import register_tools
-from tests.conftest import BASE_URL, SAMPLE_COMMENT, SAMPLE_COMMIT, SAMPLE_PARTICIPANT, SAMPLE_PR, SAMPLE_TASK, TOKEN, paged_response
+from tests.conftest import (
+    BASE_URL,
+    SAMPLE_COMMENT,
+    SAMPLE_COMMIT,
+    SAMPLE_PARTICIPANT,
+    SAMPLE_PR,
+    SAMPLE_TASK,
+    TOKEN,
+    paged_response,
+)
 
 
 @pytest.fixture()
@@ -31,7 +40,9 @@ class TestListPullRequests:
         data = paged_response([SAMPLE_PR])
         with respx.mock(base_url=BASE_URL) as router:
             router.get(f"{PR_PREFIX}").mock(return_value=Response(200, json=data))
-            result = await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo")
+            result = await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo"
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["title"] == "Add feature"
 
@@ -39,8 +50,12 @@ class TestListPullRequests:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(f"{PR_PREFIX}").mock(return_value=Response(200, json=data))
-            await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", state="MERGED")
+            route = router.get(f"{PR_PREFIX}").mock(
+                return_value=Response(200, json=data)
+            )
+            await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo", state="MERGED"
+            )
         assert "state=MERGED" in str(route.calls[0].request.url)
 
 
@@ -48,8 +63,12 @@ class TestGetPullRequest:
     async def test_returns_pr(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1").mock(return_value=Response(200, json=SAMPLE_PR))
-            result = await tools["get_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=SAMPLE_PR)
+            )
+            result = await tools["get_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["id"] == 1
         assert parsed["state"] == "OPEN"
@@ -60,7 +79,9 @@ class TestCreatePullRequest:
         _, tools = setup
         created_pr = {**SAMPLE_PR, "id": 2, "title": "New PR"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}").mock(return_value=Response(201, json=created_pr))
+            route = router.post(f"{PR_PREFIX}").mock(
+                return_value=Response(201, json=created_pr)
+            )
             result = await tools["create_pull_request"](
                 project_key="PROJ",
                 repo_slug="my-repo",
@@ -81,7 +102,9 @@ class TestCreatePullRequest:
     async def test_no_double_prefix(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}").mock(return_value=Response(201, json=SAMPLE_PR))
+            route = router.post(f"{PR_PREFIX}").mock(
+                return_value=Response(201, json=SAMPLE_PR)
+            )
             await tools["create_pull_request"](
                 project_key="PROJ",
                 repo_slug="my-repo",
@@ -99,10 +122,18 @@ class TestUpdatePullRequest:
         _, tools = setup
         updated = {**SAMPLE_PR, "title": "Updated Title", "version": 1}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1").mock(return_value=Response(200, json=SAMPLE_PR))
-            route = router.put(f"{PR_PREFIX}/1").mock(return_value=Response(200, json=updated))
+            router.get(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=SAMPLE_PR)
+            )
+            route = router.put(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=updated)
+            )
             result = await tools["update_pull_request"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0, title="Updated Title"
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                version=0,
+                title="Updated Title",
             )
         parsed = json.loads(result)
         assert parsed["title"] == "Updated Title"
@@ -117,10 +148,18 @@ class TestUpdatePullRequest:
         _, tools = setup
         updated = {**SAMPLE_PR, "version": 1}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1").mock(return_value=Response(200, json=SAMPLE_PR))
-            route = router.put(f"{PR_PREFIX}/1").mock(return_value=Response(200, json=updated))
+            router.get(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=SAMPLE_PR)
+            )
+            route = router.put(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=updated)
+            )
             await tools["update_pull_request"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0, reviewers=["carol"]
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                version=0,
+                reviewers=["carol"],
             )
         body = json.loads(route.calls[0].request.content)
         assert body["reviewers"] == [{"user": {"name": "carol"}}]
@@ -131,8 +170,12 @@ class TestMergePullRequest:
         _, tools = setup
         merged = {**SAMPLE_PR, "state": "MERGED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/merge").mock(return_value=Response(200, json=merged))
-            result = await tools["merge_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0)
+            route = router.post(f"{PR_PREFIX}/1/merge").mock(
+                return_value=Response(200, json=merged)
+            )
+            result = await tools["merge_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0
+            )
         parsed = json.loads(result)
         assert parsed["state"] == "MERGED"
         assert "version=0" in str(route.calls[0].request.url)
@@ -143,7 +186,9 @@ class TestDeclinePullRequest:
         _, tools = setup
         declined = {**SAMPLE_PR, "state": "DECLINED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/decline").mock(return_value=Response(200, json=declined))
+            router.post(f"{PR_PREFIX}/1/decline").mock(
+                return_value=Response(200, json=declined)
+            )
             result = await tools["decline_pull_request"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0
             )
@@ -156,8 +201,12 @@ class TestGetPullRequestDiff:
         _, tools = setup
         diff_data = {"diffs": [{"hunks": []}]}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(f"{PR_PREFIX}/1/diff").mock(return_value=Response(200, json=diff_data))
-            result = await tools["get_pull_request_diff"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            route = router.get(f"{PR_PREFIX}/1/diff").mock(
+                return_value=Response(200, json=diff_data)
+            )
+            result = await tools["get_pull_request_diff"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert "diffs" in parsed
         assert "contextLines=10" in str(route.calls[0].request.url)
@@ -168,8 +217,12 @@ class TestListPullRequestCommits:
         _, tools = setup
         data = paged_response([SAMPLE_COMMIT])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/commits").mock(return_value=Response(200, json=data))
-            result = await tools["list_pull_request_commits"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/commits").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["list_pull_request_commits"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["id"] == "abc123def456"
 
@@ -180,8 +233,12 @@ class TestGetPullRequestActivities:
         activity = {"id": 1, "action": "COMMENTED", "comment": SAMPLE_COMMENT}
         data = paged_response([activity])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/activities").mock(return_value=Response(200, json=data))
-            result = await tools["get_pull_request_activities"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/activities").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["get_pull_request_activities"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["action"] == "COMMENTED"
 
@@ -191,8 +248,12 @@ class TestListPullRequestComments:
         _, tools = setup
         data = paged_response([SAMPLE_COMMENT])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/comments").mock(return_value=Response(200, json=data))
-            result = await tools["list_pull_request_comments"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/comments").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["list_pull_request_comments"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["text"] == "Looks good!"
 
@@ -201,7 +262,9 @@ class TestAddPullRequestComment:
     async def test_adds_general_comment(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/comments").mock(return_value=Response(201, json=SAMPLE_COMMENT))
+            route = router.post(f"{PR_PREFIX}/1/comments").mock(
+                return_value=Response(201, json=SAMPLE_COMMENT)
+            )
             result = await tools["add_pull_request_comment"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, text="LGTM"
             )
@@ -215,7 +278,9 @@ class TestAddPullRequestComment:
     async def test_adds_inline_comment(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/comments").mock(return_value=Response(201, json=SAMPLE_COMMENT))
+            route = router.post(f"{PR_PREFIX}/1/comments").mock(
+                return_value=Response(201, json=SAMPLE_COMMENT)
+            )
             await tools["add_pull_request_comment"](
                 project_key="PROJ",
                 repo_slug="my-repo",
@@ -235,9 +300,15 @@ class TestAddPullRequestComment:
     async def test_adds_reply_comment(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/comments").mock(return_value=Response(201, json=SAMPLE_COMMENT))
+            route = router.post(f"{PR_PREFIX}/1/comments").mock(
+                return_value=Response(201, json=SAMPLE_COMMENT)
+            )
             await tools["add_pull_request_comment"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, text="Agreed", parent_comment_id=5
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                text="Agreed",
+                parent_comment_id=5,
             )
         body = json.loads(route.calls[0].request.content)
         assert body["parent"]["id"] == 5
@@ -246,32 +317,44 @@ class TestAddPullRequestComment:
 class TestInputValidation:
     async def test_rejects_negative_pr_id(self, setup):
         _, tools = setup
-        result = await tools["get_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=-1)
+        result = await tools["get_pull_request"](
+            project_key="PROJ", repo_slug="my-repo", pr_id=-1
+        )
         assert "Error" in result
         assert "positive integer" in result
 
     async def test_rejects_zero_pr_id(self, setup):
         _, tools = setup
-        result = await tools["merge_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=0, version=0)
+        result = await tools["merge_pull_request"](
+            project_key="PROJ", repo_slug="my-repo", pr_id=0, version=0
+        )
         assert "Error" in result
         assert "positive integer" in result
 
     async def test_rejects_invalid_project_key(self, setup):
         _, tools = setup
-        result = await tools["list_pull_requests"](project_key="../admin", repo_slug="my-repo")
+        result = await tools["list_pull_requests"](
+            project_key="../admin", repo_slug="my-repo"
+        )
         assert "Error" in result
         assert "Invalid project key" in result
 
     async def test_rejects_invalid_repo_slug(self, setup):
         _, tools = setup
-        result = await tools["list_pull_requests"](project_key="PROJ", repo_slug="../../admin")
+        result = await tools["list_pull_requests"](
+            project_key="PROJ", repo_slug="../../admin"
+        )
         assert "Error" in result
         assert "Invalid repo slug" in result
 
     async def test_rejects_negative_parent_comment_id(self, setup):
         _, tools = setup
         result = await tools["add_pull_request_comment"](
-            project_key="PROJ", repo_slug="my-repo", pr_id=1, text="hi", parent_comment_id=-1
+            project_key="PROJ",
+            repo_slug="my-repo",
+            pr_id=1,
+            text="hi",
+            parent_comment_id=-1,
         )
         assert "Error" in result
         assert "positive integer" in result
@@ -280,7 +363,9 @@ class TestInputValidation:
         _, tools = setup
         diff_data = {"diffs": []}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(f"{PR_PREFIX}/1/diff").mock(return_value=Response(200, json=diff_data))
+            route = router.get(f"{PR_PREFIX}/1/diff").mock(
+                return_value=Response(200, json=diff_data)
+            )
             await tools["get_pull_request_diff"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, context_lines=99999
             )
@@ -294,7 +379,9 @@ class TestListPullRequestsEnhanced:
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
             route = router.get(PR_PREFIX).mock(return_value=Response(200, json=data))
-            await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", direction="OUTGOING")
+            await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo", direction="OUTGOING"
+            )
         assert "direction=OUTGOING" in str(route.calls[0].request.url)
 
     async def test_filter_text(self, setup):
@@ -302,7 +389,9 @@ class TestListPullRequestsEnhanced:
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
             route = router.get(PR_PREFIX).mock(return_value=Response(200, json=data))
-            await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", filter_text="bugfix")
+            await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo", filter_text="bugfix"
+            )
         assert "filterText=bugfix" in str(route.calls[0].request.url)
 
     async def test_order_filter(self, setup):
@@ -310,7 +399,9 @@ class TestListPullRequestsEnhanced:
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
             route = router.get(PR_PREFIX).mock(return_value=Response(200, json=data))
-            await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", order="OLDEST")
+            await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo", order="OLDEST"
+            )
         assert "order=OLDEST" in str(route.calls[0].request.url)
 
     async def test_draft_filter(self, setup):
@@ -318,12 +409,16 @@ class TestListPullRequestsEnhanced:
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
             route = router.get(PR_PREFIX).mock(return_value=Response(200, json=data))
-            await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", draft=True)
+            await tools["list_pull_requests"](
+                project_key="PROJ", repo_slug="my-repo", draft=True
+            )
         assert "draft=true" in str(route.calls[0].request.url)
 
     async def test_invalid_direction_returns_error(self, setup):
         _, tools = setup
-        result = await tools["list_pull_requests"](project_key="PROJ", repo_slug="my-repo", direction="BOGUS")
+        result = await tools["list_pull_requests"](
+            project_key="PROJ", repo_slug="my-repo", direction="BOGUS"
+        )
         assert "Error" in result
         assert "Invalid PR direction" in result
 
@@ -333,10 +428,16 @@ class TestCreatePullRequestDraft:
         _, tools = setup
         draft_pr = {**SAMPLE_PR, "draft": True}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(PR_PREFIX).mock(return_value=Response(201, json=draft_pr))
+            route = router.post(PR_PREFIX).mock(
+                return_value=Response(201, json=draft_pr)
+            )
             await tools["create_pull_request"](
-                project_key="PROJ", repo_slug="my-repo", title="Draft",
-                source_branch="feature/x", target_branch="main", draft=True,
+                project_key="PROJ",
+                repo_slug="my-repo",
+                title="Draft",
+                source_branch="feature/x",
+                target_branch="main",
+                draft=True,
             )
         body = json.loads(route.calls[0].request.content)
         assert body["draft"] is True
@@ -344,10 +445,15 @@ class TestCreatePullRequestDraft:
     async def test_draft_false_omits_field(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(PR_PREFIX).mock(return_value=Response(201, json=SAMPLE_PR))
+            route = router.post(PR_PREFIX).mock(
+                return_value=Response(201, json=SAMPLE_PR)
+            )
             await tools["create_pull_request"](
-                project_key="PROJ", repo_slug="my-repo", title="Normal",
-                source_branch="feature/x", target_branch="main",
+                project_key="PROJ",
+                repo_slug="my-repo",
+                title="Normal",
+                source_branch="feature/x",
+                target_branch="main",
             )
         body = json.loads(route.calls[0].request.content)
         assert "draft" not in body
@@ -358,8 +464,12 @@ class TestCanMergePullRequest:
         _, tools = setup
         merge_data = {"canMerge": True, "conflicted": False, "vetoes": []}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/merge").mock(return_value=Response(200, json=merge_data))
-            result = await tools["can_merge_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/merge").mock(
+                return_value=Response(200, json=merge_data)
+            )
+            result = await tools["can_merge_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["canMerge"] is True
 
@@ -369,9 +479,15 @@ class TestMergePullRequestStrategy:
         _, tools = setup
         merged = {**SAMPLE_PR, "state": "MERGED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/merge").mock(return_value=Response(200, json=merged))
+            route = router.post(f"{PR_PREFIX}/1/merge").mock(
+                return_value=Response(200, json=merged)
+            )
             await tools["merge_pull_request"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0, strategy="squash"
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                version=0,
+                strategy="squash",
             )
         assert "strategyId=squash" in str(route.calls[0].request.url)
 
@@ -381,8 +497,12 @@ class TestReopenPullRequest:
         _, tools = setup
         reopened = {**SAMPLE_PR, "state": "OPEN"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/reopen").mock(return_value=Response(200, json=reopened))
-            result = await tools["reopen_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0)
+            route = router.post(f"{PR_PREFIX}/1/reopen").mock(
+                return_value=Response(200, json=reopened)
+            )
+            result = await tools["reopen_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0
+            )
         parsed = json.loads(result)
         assert parsed["state"] == "OPEN"
         assert "version=0" in str(route.calls[0].request.url)
@@ -391,10 +511,19 @@ class TestReopenPullRequest:
 class TestApprovePullRequest:
     async def test_approves_pr(self, setup):
         _, tools = setup
-        approval = {"user": {"name": "me"}, "role": "REVIEWER", "approved": True, "status": "APPROVED"}
+        approval = {
+            "user": {"name": "me"},
+            "role": "REVIEWER",
+            "approved": True,
+            "status": "APPROVED",
+        }
         with respx.mock(base_url=BASE_URL) as router:
-            router.post(f"{PR_PREFIX}/1/approve").mock(return_value=Response(200, json=approval))
-            result = await tools["approve_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.post(f"{PR_PREFIX}/1/approve").mock(
+                return_value=Response(200, json=approval)
+            )
+            result = await tools["approve_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["approved"] is True
 
@@ -403,8 +532,12 @@ class TestUnapprovePullRequest:
     async def test_unapproves_pr(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.delete(f"{PR_PREFIX}/1/approve").mock(return_value=Response(200, json=SAMPLE_PARTICIPANT))
-            result = await tools["unapprove_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.delete(f"{PR_PREFIX}/1/approve").mock(
+                return_value=Response(200, json=SAMPLE_PARTICIPANT)
+            )
+            result = await tools["unapprove_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["user"]["name"] == "reviewer"
 
@@ -414,8 +547,12 @@ class TestRequestChangesPullRequest:
         _, tools = setup
         resp = {"user": {"name": "me"}, "status": "NEEDS_WORK"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/participants/status").mock(return_value=Response(200, json=resp))
-            result = await tools["request_changes_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            route = router.put(f"{PR_PREFIX}/1/participants/status").mock(
+                return_value=Response(200, json=resp)
+            )
+            await tools["request_changes_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         body = json.loads(route.calls[0].request.content)
         assert body["status"] == "NEEDS_WORK"
 
@@ -425,8 +562,12 @@ class TestRemoveChangeRequestPullRequest:
         _, tools = setup
         resp = {"user": {"name": "me"}, "status": "UNAPPROVED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/participants/status").mock(return_value=Response(200, json=resp))
-            result = await tools["remove_change_request_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            route = router.put(f"{PR_PREFIX}/1/participants/status").mock(
+                return_value=Response(200, json=resp)
+            )
+            await tools["remove_change_request_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         body = json.loads(route.calls[0].request.content)
         assert body["status"] == "UNAPPROVED"
 
@@ -436,8 +577,12 @@ class TestListPullRequestParticipants:
         _, tools = setup
         data = paged_response([SAMPLE_PARTICIPANT])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/participants").mock(return_value=Response(200, json=data))
-            result = await tools["list_pull_request_participants"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/participants").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["list_pull_request_participants"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["role"] == "REVIEWER"
 
@@ -446,8 +591,12 @@ class TestWatchPullRequest:
     async def test_watches_pr(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.post(f"{PR_PREFIX}/1/watch").mock(return_value=Response(204, json={}))
-            result = await tools["watch_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.post(f"{PR_PREFIX}/1/watch").mock(
+                return_value=Response(204, json={})
+            )
+            result = await tools["watch_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert isinstance(parsed, dict)
 
@@ -456,8 +605,12 @@ class TestUnwatchPullRequest:
     async def test_unwatches_pr(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.delete(f"{PR_PREFIX}/1/watch").mock(return_value=Response(204, json={}))
-            result = await tools["unwatch_pull_request"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.delete(f"{PR_PREFIX}/1/watch").mock(
+                return_value=Response(204, json={})
+            )
+            result = await tools["unwatch_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert isinstance(parsed, dict)
 
@@ -467,8 +620,12 @@ class TestGetCommitMessageSuggestion:
         _, tools = setup
         suggestion = {"body": "Merge pull request #1: Add feature\n\n* Fix bug"}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/commit-message-suggestion").mock(return_value=Response(200, json=suggestion))
-            result = await tools["get_commit_message_suggestion"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/commit-message-suggestion").mock(
+                return_value=Response(200, json=suggestion)
+            )
+            result = await tools["get_commit_message_suggestion"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert "body" in parsed
 
@@ -479,8 +636,12 @@ class TestGetPullRequestDiffStat:
         change = {"path": {"toString": "src/app.py"}, "type": "MODIFY"}
         data = paged_response([change])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/changes").mock(return_value=Response(200, json=data))
-            result = await tools["get_pull_request_diff_stat"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/changes").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["get_pull_request_diff_stat"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["type"] == "MODIFY"
 
@@ -489,7 +650,9 @@ class TestGetPullRequestComment:
     async def test_returns_comment(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/comments/10").mock(return_value=Response(200, json=SAMPLE_COMMENT))
+            router.get(f"{PR_PREFIX}/1/comments/10").mock(
+                return_value=Response(200, json=SAMPLE_COMMENT)
+            )
             result = await tools["get_pull_request_comment"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, comment_id=10
             )
@@ -510,9 +673,16 @@ class TestUpdatePullRequestComment:
         _, tools = setup
         updated = {**SAMPLE_COMMENT, "text": "Updated text", "version": 1}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(return_value=Response(200, json=updated))
+            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(
+                return_value=Response(200, json=updated)
+            )
             result = await tools["update_pull_request_comment"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, comment_id=10, version=0, text="Updated text"
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                comment_id=10,
+                version=0,
+                text="Updated text",
             )
         parsed = json.loads(result)
         assert parsed["text"] == "Updated text"
@@ -526,9 +696,15 @@ class TestResolvePullRequestComment:
         _, tools = setup
         resolved = {**SAMPLE_COMMENT, "state": "RESOLVED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(return_value=Response(200, json=resolved))
+            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(
+                return_value=Response(200, json=resolved)
+            )
             await tools["resolve_pull_request_comment"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, comment_id=10, version=0
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                comment_id=10,
+                version=0,
             )
         body = json.loads(route.calls[0].request.content)
         assert body["state"] == "RESOLVED"
@@ -539,9 +715,15 @@ class TestReopenPullRequestComment:
         _, tools = setup
         reopened = {**SAMPLE_COMMENT, "state": "OPEN"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(return_value=Response(200, json=reopened))
+            route = router.put(f"{PR_PREFIX}/1/comments/10").mock(
+                return_value=Response(200, json=reopened)
+            )
             await tools["reopen_pull_request_comment"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, comment_id=10, version=0
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                comment_id=10,
+                version=0,
             )
         body = json.loads(route.calls[0].request.content)
         assert body["state"] == "OPEN"
@@ -552,8 +734,12 @@ class TestListPullRequestTasks:
         _, tools = setup
         data = paged_response([SAMPLE_TASK])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/tasks").mock(return_value=Response(200, json=data))
-            result = await tools["list_pull_request_tasks"](project_key="PROJ", repo_slug="my-repo", pr_id=1)
+            router.get(f"{PR_PREFIX}/1/tasks").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["list_pull_request_tasks"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["text"] == "Fix the tests"
 
@@ -562,7 +748,9 @@ class TestCreatePullRequestTask:
     async def test_creates_task(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/tasks").mock(return_value=Response(201, json=SAMPLE_TASK))
+            route = router.post(f"{PR_PREFIX}/1/tasks").mock(
+                return_value=Response(201, json=SAMPLE_TASK)
+            )
             result = await tools["create_pull_request_task"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, text="Fix the tests"
             )
@@ -575,9 +763,15 @@ class TestCreatePullRequestTask:
     async def test_creates_task_with_comment_anchor(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.post(f"{PR_PREFIX}/1/tasks").mock(return_value=Response(201, json=SAMPLE_TASK))
+            route = router.post(f"{PR_PREFIX}/1/tasks").mock(
+                return_value=Response(201, json=SAMPLE_TASK)
+            )
             await tools["create_pull_request_task"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, text="Fix it", comment_id=10
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                text="Fix it",
+                comment_id=10,
             )
         body = json.loads(route.calls[0].request.content)
         assert body["anchor"]["id"] == 10
@@ -588,7 +782,9 @@ class TestGetPullRequestTask:
     async def test_returns_task(self, setup):
         _, tools = setup
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{PR_PREFIX}/1/tasks/100").mock(return_value=Response(200, json=SAMPLE_TASK))
+            router.get(f"{PR_PREFIX}/1/tasks/100").mock(
+                return_value=Response(200, json=SAMPLE_TASK)
+            )
             result = await tools["get_pull_request_task"](
                 project_key="PROJ", repo_slug="my-repo", pr_id=1, task_id=100
             )
@@ -601,9 +797,15 @@ class TestUpdatePullRequestTask:
         _, tools = setup
         resolved = {**SAMPLE_TASK, "state": "RESOLVED"}
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.put(f"{PR_PREFIX}/1/tasks/100").mock(return_value=Response(200, json=resolved))
+            route = router.put(f"{PR_PREFIX}/1/tasks/100").mock(
+                return_value=Response(200, json=resolved)
+            )
             result = await tools["update_pull_request_task"](
-                project_key="PROJ", repo_slug="my-repo", pr_id=1, task_id=100, state="RESOLVED"
+                project_key="PROJ",
+                repo_slug="my-repo",
+                pr_id=1,
+                task_id=100,
+                state="RESOLVED",
             )
         parsed = json.loads(result)
         assert parsed["state"] == "RESOLVED"
