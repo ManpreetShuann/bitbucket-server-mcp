@@ -60,14 +60,17 @@ This server runs locally via stdio rather than as a hosted HTTP service. Running
 Add to `~/.claude.json` or project `.claude/settings.json`:
 
 <details>
-<summary>With uv</summary>
+<summary>With pip (recommended)</summary>
+
+```bash
+pip install bitbucket-server-mcp
+```
 
 ```json
 {
   "mcpServers": {
     "bitbucket": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
+      "command": "bitbucket-server-mcp",
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "your-token-here"
@@ -99,20 +102,49 @@ Add to `~/.claude.json` or project `.claude/settings.json`:
 
 </details>
 
+<details>
+<summary>With uv (from source, for development)</summary>
+
+```bash
+git clone https://github.com/ManpreetShuann/bitbucket-server-mcp.git
+cd bitbucket-server-mcp
+uv sync
+```
+
+```json
+{
+  "mcpServers": {
+    "bitbucket": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
+      "env": {
+        "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
+        "BITBUCKET_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+</details>
+
 ### GitHub Copilot (VS Code)
 
 Add to `.vscode/mcp.json` in your workspace:
 
 <details>
-<summary>With uv</summary>
+<summary>With pip (recommended)</summary>
+
+```bash
+pip install bitbucket-server-mcp
+```
 
 ```json
 {
   "servers": {
     "bitbucket": {
       "type": "stdio",
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
+      "command": "bitbucket-server-mcp",
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "${input:bitbucket-token}"
@@ -142,6 +174,41 @@ Add to `.vscode/mcp.json` in your workspace:
       "type": "stdio",
       "command": "docker",
       "args": ["run", "--rm", "-i", "-e", "BITBUCKET_URL", "-e", "BITBUCKET_TOKEN", "bitbucket-server-mcp"],
+      "env": {
+        "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
+        "BITBUCKET_TOKEN": "${input:bitbucket-token}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "bitbucket-token",
+      "description": "Bitbucket Server HTTP access token",
+      "password": true
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>With uv (from source, for development)</summary>
+
+```bash
+git clone https://github.com/ManpreetShuann/bitbucket-server-mcp.git
+cd bitbucket-server-mcp
+uv sync
+```
+
+```json
+{
+  "servers": {
+    "bitbucket": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"],
       "env": {
         "BITBUCKET_URL": "https://bitbucket.yourcompany.com",
         "BITBUCKET_TOKEN": "${input:bitbucket-token}"
@@ -166,31 +233,7 @@ Add to `.vscode/mcp.json` in your workspace:
 Add to `~/.codex/config.toml`:
 
 <details>
-<summary>With uvx (recommended)</summary>
-
-```toml
-[mcp_servers.bitbucket]
-command = "uvx"
-args = ["bitbucket-server-mcp"]
-
-[mcp_servers.bitbucket.env]
-BITBUCKET_URL = "https://bitbucket.yourcompany.com"
-BITBUCKET_TOKEN = "your-token-here"
-```
-
-Or via CLI:
-
-```bash
-codex mcp add bitbucket \
-  --env BITBUCKET_URL=https://bitbucket.yourcompany.com \
-  --env BITBUCKET_TOKEN=your-token-here \
-  -- uvx bitbucket-server-mcp
-```
-
-</details>
-
-<details>
-<summary>With pip</summary>
+<summary>With pip (recommended)</summary>
 
 ```bash
 pip install bitbucket-server-mcp
@@ -237,6 +280,36 @@ codex mcp add bitbucket \
   --env BITBUCKET_URL=https://bitbucket.yourcompany.com \
   --env BITBUCKET_TOKEN=your-token-here \
   -- docker run --rm -i -e BITBUCKET_URL -e BITBUCKET_TOKEN bitbucket-server-mcp
+```
+
+</details>
+
+<details>
+<summary>With uv (from source, for development)</summary>
+
+```bash
+git clone https://github.com/ManpreetShuann/bitbucket-server-mcp.git
+cd bitbucket-server-mcp
+uv sync
+```
+
+```toml
+[mcp_servers.bitbucket]
+command = "uv"
+args = ["run", "--directory", "/path/to/bitbucket-server-mcp", "bitbucket-server-mcp"]
+
+[mcp_servers.bitbucket.env]
+BITBUCKET_URL = "https://bitbucket.yourcompany.com"
+BITBUCKET_TOKEN = "your-token-here"
+```
+
+Or via CLI:
+
+```bash
+codex mcp add bitbucket \
+  --env BITBUCKET_URL=https://bitbucket.yourcompany.com \
+  --env BITBUCKET_TOKEN=your-token-here \
+  -- uv run --directory /path/to/bitbucket-server-mcp bitbucket-server-mcp
 ```
 
 </details>
