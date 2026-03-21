@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.4.4 (2026-03-21)
+
+### Bug Fixes
+
+- **ci**: Prevent re-publishing already-released versions to PyPI
+  ([`e76cc06`](https://github.com/ManpreetShuann/bitbucket-server-mcp/commit/e76cc0624ec88cb31d3f5548a0dd3ec80b6bac51))
+
+### Documentation
+
+- Standardize README integration options to pip, docker, and uv
+  ([`9ca4d6e`](https://github.com/ManpreetShuann/bitbucket-server-mcp/commit/9ca4d6e24d8a0a51ade74d844b7afc6e4a20a419))
+
+
 ## v1.4.3 (2026-03-21)
 
 ### Bug Fixes
