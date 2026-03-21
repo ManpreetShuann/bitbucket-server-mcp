@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/bitbucket-mcp)](https://pypi.org/project/bitbucket-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An MCP (Model Context Protocol) server for Atlassian Bitbucket Server / Data Center (Enterprise). Provides 55 tools for reading and writing projects, repositories, branches, files, commits, pull requests, and code search — with **no deletion operations** by design.
+An MCP (Model Context Protocol) server for Atlassian Bitbucket Server / Data Center (Enterprise). Provides 54 tools for reading and writing projects, repositories, branches, files, commits, pull requests, and code search — with **no deletion operations** by design.
 
 ## Installation
 
@@ -184,7 +184,7 @@ codex mcp add bitbucket \
   -- uv run --directory /path/to/bitbucket-mcp bitbucket-mcp
 ```
 
-## Tools (55 total)
+## Tools (54 total)
 
 ### Projects
 | Tool | Description |

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-MCP server for Atlassian Bitbucket Server / Data Center (Enterprise) REST API. Provides 55 tools for managing projects, repositories, branches, files, commits, pull requests, and code search. No deletion operations by design.
+MCP server for Atlassian Bitbucket Server / Data Center (Enterprise) REST API. Provides 54 tools for managing projects, repositories, branches, files, commits, pull requests, and code search. No deletion operations by design.
 
 ## Tech Stack
 

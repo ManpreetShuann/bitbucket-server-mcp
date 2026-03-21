@@ -16,7 +16,6 @@ from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
 from bitbucket_mcp.validation import (
     ValidationError,
     clamp_context_lines,
-    validate_participant_status,
     validate_positive_int,
     validate_pr_direction,
     validate_pr_order,
@@ -148,8 +147,16 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             validate_repo_slug(repo_slug)
             # Auto-prefix bare branch names with refs/heads/ so callers can
             # pass simple names like "main" instead of "refs/heads/main".
-            from_ref = source_branch if source_branch.startswith("refs/") else f"refs/heads/{source_branch}"
-            to_ref = target_branch if target_branch.startswith("refs/") else f"refs/heads/{target_branch}"
+            from_ref = (
+                source_branch
+                if source_branch.startswith("refs/")
+                else f"refs/heads/{source_branch}"
+            )
+            to_ref = (
+                target_branch
+                if target_branch.startswith("refs/")
+                else f"refs/heads/{target_branch}"
+            )
 
             body: dict = {
                 "title": title,
@@ -168,7 +175,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if draft:
                 body["draft"] = True
 
-            result = await client.post(f"/projects/{project_key}/repos/{repo_slug}/pull-requests", json_data=body)
+            result = await client.post(
+                f"/projects/{project_key}/repos/{repo_slug}/pull-requests",
+                json_data=body,
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -209,14 +219,21 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             body: dict = {
                 "version": version,
                 "title": title or current.get("title", ""),
-                "description": current.get("description", "") if description is None else description,
+                "description": current.get("description", "")
+                if description is None
+                else description,
                 "toRef": current.get("toRef", {}),
-                "reviewers": current.get("reviewers", []) if reviewers is None
+                "reviewers": current.get("reviewers", [])
+                if reviewers is None
                 else [{"user": {"name": r}} for r in reviewers],
             }
 
             if target_branch:
-                to_ref = target_branch if target_branch.startswith("refs/") else f"refs/heads/{target_branch}"
+                to_ref = (
+                    target_branch
+                    if target_branch.startswith("refs/")
+                    else f"refs/heads/{target_branch}"
+                )
                 body["toRef"] = {
                     "id": to_ref,
                     "repository": {"slug": repo_slug, "project": {"key": project_key}},
@@ -237,7 +254,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
     # ------------------------------------------------------------------
 
     @mcp.tool()
-    async def can_merge_pull_request(project_key: str, repo_slug: str, pr_id: int) -> str:
+    async def can_merge_pull_request(
+        project_key: str, repo_slug: str, pr_id: int
+    ) -> str:
         """Check whether a pull request can be merged.
 
         Returns merge readiness including canMerge status, conflicted state, and any vetoes.
@@ -248,7 +267,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.get(f"{_pr_path(project_key, repo_slug, pr_id)}/merge")
+            result = await client.get(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/merge"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -302,7 +323,8 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.post(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/decline", params={"version": version}
+                f"{_pr_path(project_key, repo_slug, pr_id)}/decline",
+                params={"version": version},
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -327,7 +349,8 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.post(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/reopen", params={"version": version}
+                f"{_pr_path(project_key, repo_slug, pr_id)}/reopen",
+                params={"version": version},
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -349,7 +372,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.post(f"{_pr_path(project_key, repo_slug, pr_id)}/approve")
+            result = await client.post(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/approve"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -357,7 +382,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             return f"Unexpected error: {e}"
 
     @mcp.tool()
-    async def unapprove_pull_request(project_key: str, repo_slug: str, pr_id: int) -> str:
+    async def unapprove_pull_request(
+        project_key: str, repo_slug: str, pr_id: int
+    ) -> str:
         """Remove your approval from a pull request.
 
         Args:
@@ -366,7 +393,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.delete(f"{_pr_path(project_key, repo_slug, pr_id)}/approve")
+            result = await client.delete(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/approve"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -448,7 +477,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/participants", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/participants",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -470,7 +501,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.post(f"{_pr_path(project_key, repo_slug, pr_id)}/watch")
+            result = await client.post(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/watch"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -487,7 +520,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.delete(f"{_pr_path(project_key, repo_slug, pr_id)}/watch")
+            result = await client.delete(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/watch"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -499,7 +534,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
     # ------------------------------------------------------------------
 
     @mcp.tool()
-    async def get_commit_message_suggestion(project_key: str, repo_slug: str, pr_id: int) -> str:
+    async def get_commit_message_suggestion(
+        project_key: str, repo_slug: str, pr_id: int
+    ) -> str:
         """Get a suggested commit message for merging a pull request.
 
         Based on the PR title and included commits.
@@ -510,7 +547,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             pr_id: The pull request ID.
         """
         try:
-            result = await client.get(f"{_pr_path(project_key, repo_slug, pr_id)}/commit-message-suggestion")
+            result = await client.get(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/commit-message-suggestion"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -542,7 +581,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             params: dict = {"contextLines": clamp_context_lines(context_lines)}
             if src_path:
                 params["srcPath"] = src_path
-            result = await client.get(f"{_pr_path(project_key, repo_slug, pr_id)}/diff", params=params)
+            result = await client.get(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/diff", params=params
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -568,7 +609,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/changes", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/changes",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -599,7 +642,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/commits", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/commits",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -626,7 +671,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/activities", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/activities",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -657,7 +704,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/comments", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/comments",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -682,7 +731,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             validate_positive_int(comment_id, "comment_id")
-            result = await client.get(f"{_pr_path(project_key, repo_slug, pr_id)}/comments/{comment_id}")
+            result = await client.get(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/comments/{comment_id}"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -739,7 +790,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                     anchor["fileType"] = file_type
                 body["anchor"] = anchor
 
-            result = await client.post(f"{_pr_path(project_key, repo_slug, pr_id)}/comments", json_data=body)
+            result = await client.post(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/comments", json_data=body
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -858,7 +911,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             result = await client.get_paged(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/tasks", start=start, limit=limit
+                f"{_pr_path(project_key, repo_slug, pr_id)}/tasks",
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -915,7 +970,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             validate_positive_int(task_id, "task_id")
-            result = await client.get(f"{_pr_path(project_key, repo_slug, pr_id)}/tasks/{task_id}")
+            result = await client.get(
+                f"{_pr_path(project_key, repo_slug, pr_id)}/tasks/{task_id}"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -951,7 +1008,8 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if not body:
                 return "Error: must provide at least one of 'text' or 'state' to update"
             result = await client.put(
-                f"{_pr_path(project_key, repo_slug, pr_id)}/tasks/{task_id}", json_data=body
+                f"{_pr_path(project_key, repo_slug, pr_id)}/tasks/{task_id}",
+                json_data=body,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:

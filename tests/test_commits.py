@@ -29,8 +29,12 @@ class TestListCommits:
         _, tools = setup
         data = paged_response([SAMPLE_COMMIT])
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{REPO_PREFIX}/commits").mock(return_value=Response(200, json=data))
-            result = await tools["list_commits"](project_key="PROJ", repo_slug="my-repo")
+            router.get(f"{REPO_PREFIX}/commits").mock(
+                return_value=Response(200, json=data)
+            )
+            result = await tools["list_commits"](
+                project_key="PROJ", repo_slug="my-repo"
+            )
         parsed = json.loads(result)
         assert parsed["values"][0]["id"] == "abc123def456"
 
@@ -38,9 +42,15 @@ class TestListCommits:
         _, tools = setup
         data = paged_response([])
         with respx.mock(base_url=BASE_URL) as router:
-            route = router.get(f"{REPO_PREFIX}/commits").mock(return_value=Response(200, json=data))
+            route = router.get(f"{REPO_PREFIX}/commits").mock(
+                return_value=Response(200, json=data)
+            )
             await tools["list_commits"](
-                project_key="PROJ", repo_slug="my-repo", until="main", since="abc123", path="src/app.py"
+                project_key="PROJ",
+                repo_slug="my-repo",
+                until="main",
+                since="abc123",
+                path="src/app.py",
             )
         url = str(route.calls[0].request.url)
         assert "until=main" in url
@@ -55,7 +65,9 @@ class TestGetCommit:
             router.get(f"{REPO_PREFIX}/commits/abc123def456").mock(
                 return_value=Response(200, json=SAMPLE_COMMIT)
             )
-            result = await tools["get_commit"](project_key="PROJ", repo_slug="my-repo", commit_id="abc123def456")
+            result = await tools["get_commit"](
+                project_key="PROJ", repo_slug="my-repo", commit_id="abc123def456"
+            )
         parsed = json.loads(result)
         assert parsed["message"] == "Fix bug"
 
@@ -69,7 +81,10 @@ class TestGetCommitDiff:
                 return_value=Response(200, json=diff_data)
             )
             result = await tools["get_commit_diff"](
-                project_key="PROJ", repo_slug="my-repo", commit_id="abc123", context_lines=5
+                project_key="PROJ",
+                repo_slug="my-repo",
+                commit_id="abc123",
+                context_lines=5,
             )
         parsed = json.loads(result)
         assert "diffs" in parsed
@@ -82,7 +97,9 @@ class TestGetCommitChanges:
         changes = [{"path": {"toString": "src/app.py"}, "type": "MODIFY"}]
         data = paged_response(changes)
         with respx.mock(base_url=BASE_URL) as router:
-            router.get(f"{REPO_PREFIX}/commits/abc123/changes").mock(return_value=Response(200, json=data))
+            router.get(f"{REPO_PREFIX}/commits/abc123/changes").mock(
+                return_value=Response(200, json=data)
+            )
             result = await tools["get_commit_changes"](
                 project_key="PROJ", repo_slug="my-repo", commit_id="abc123"
             )

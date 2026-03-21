@@ -10,12 +10,18 @@ import json
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
-from bitbucket_mcp.validation import ValidationError, validate_project_key, validate_repo_slug
+from bitbucket_mcp.validation import (
+    ValidationError,
+    validate_project_key,
+    validate_repo_slug,
+)
 
 
 def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
     @mcp.tool()
-    async def list_repositories(project_key: str, start: int = 0, limit: int = 25) -> str:
+    async def list_repositories(
+        project_key: str, start: int = 0, limit: int = 25
+    ) -> str:
         """List all repositories in a project (paginated).
 
         Args:
@@ -25,7 +31,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             validate_project_key(project_key)
-            result = await client.get_paged(f"/projects/{project_key}/repos", start=start, limit=limit)
+            result = await client.get_paged(
+                f"/projects/{project_key}/repos", start=start, limit=limit
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"

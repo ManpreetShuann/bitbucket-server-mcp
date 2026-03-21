@@ -16,7 +16,11 @@ import json
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
-from bitbucket_mcp.validation import ValidationError, validate_project_key, validate_repo_slug
+from bitbucket_mcp.validation import (
+    ValidationError,
+    validate_project_key,
+    validate_repo_slug,
+)
 
 
 def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:

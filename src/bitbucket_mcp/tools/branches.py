@@ -11,7 +11,11 @@ import json
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
-from bitbucket_mcp.validation import ValidationError, validate_project_key, validate_repo_slug
+from bitbucket_mcp.validation import (
+    ValidationError,
+    validate_project_key,
+    validate_repo_slug,
+)
 
 
 def _repo_path(project_key: str, repo_slug: str) -> str:
@@ -48,7 +52,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 # Bitbucket API expects camelCase "filterText", not snake_case.
                 params["filterText"] = filter_text
             result = await client.get_paged(
-                f"{_repo_path(project_key, repo_slug)}/branches", params=params, start=start, limit=limit
+                f"{_repo_path(project_key, repo_slug)}/branches",
+                params=params,
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
@@ -65,7 +72,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             repo_slug: The repository slug.
         """
         try:
-            result = await client.get(f"{_repo_path(project_key, repo_slug)}/branches/default")
+            result = await client.get(
+                f"{_repo_path(project_key, repo_slug)}/branches/default"
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -89,7 +98,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         """
         try:
             body = {"name": name, "startPoint": start_point}
-            result = await client.post(f"{_repo_path(project_key, repo_slug)}/branches", json_data=body)
+            result = await client.post(
+                f"{_repo_path(project_key, repo_slug)}/branches", json_data=body
+            )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
@@ -118,7 +129,10 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if filter_text:
                 params["filterText"] = filter_text
             result = await client.get_paged(
-                f"{_repo_path(project_key, repo_slug)}/tags", params=params, start=start, limit=limit
+                f"{_repo_path(project_key, repo_slug)}/tags",
+                params=params,
+                start=start,
+                limit=limit,
             )
             return json.dumps(result, indent=2)
         except (BitbucketAPIError, ValidationError) as e:

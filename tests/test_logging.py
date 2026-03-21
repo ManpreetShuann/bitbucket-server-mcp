@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 
 import pytest
 import respx
@@ -83,7 +82,9 @@ class TestClientLogging:
         bb_logger = logging.getLogger("bitbucket_mcp")
         bb_logger.propagate = True
         with respx.mock(base_url=BASE_URL) as router:
-            router.get("/rest/api/1.0/projects").mock(return_value=Response(200, json={}))
+            router.get("/rest/api/1.0/projects").mock(
+                return_value=Response(200, json={})
+            )
             with caplog.at_level(logging.DEBUG, logger="bitbucket_mcp.client"):
                 await client.get("/projects")
         assert "GET /rest/api/1.0/projects" in caplog.text
@@ -93,7 +94,9 @@ class TestClientLogging:
         bb_logger = logging.getLogger("bitbucket_mcp")
         bb_logger.propagate = True
         with respx.mock(base_url=BASE_URL) as router:
-            router.post("/rest/api/1.0/projects/PROJ/repos").mock(return_value=Response(201, json={}))
+            router.post("/rest/api/1.0/projects/PROJ/repos").mock(
+                return_value=Response(201, json={})
+            )
             with caplog.at_level(logging.DEBUG, logger="bitbucket_mcp.client"):
                 await client.post("/projects/PROJ/repos", json_data={"name": "test"})
         assert "POST /rest/api/1.0/projects/PROJ/repos" in caplog.text
@@ -104,7 +107,9 @@ class TestClientLogging:
         bb_logger.propagate = True
         error_body = {"errors": [{"message": "Not found"}]}
         with respx.mock(base_url=BASE_URL) as router:
-            router.get("/rest/api/1.0/projects/MISSING").mock(return_value=Response(404, json=error_body))
+            router.get("/rest/api/1.0/projects/MISSING").mock(
+                return_value=Response(404, json=error_body)
+            )
             with caplog.at_level(logging.WARNING, logger="bitbucket_mcp.client"):
                 with pytest.raises(BitbucketAPIError):
                     await client.get("/projects/MISSING")

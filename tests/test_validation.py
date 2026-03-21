@@ -18,10 +18,16 @@ from bitbucket_mcp.validation import (
 
 class TestValidateBaseUrl:
     def test_valid_https(self):
-        assert validate_base_url("https://bitbucket.example.com") == "https://bitbucket.example.com"
+        assert (
+            validate_base_url("https://bitbucket.example.com")
+            == "https://bitbucket.example.com"
+        )
 
     def test_strips_trailing_slash(self):
-        assert validate_base_url("https://bitbucket.example.com/") == "https://bitbucket.example.com"
+        assert (
+            validate_base_url("https://bitbucket.example.com/")
+            == "https://bitbucket.example.com"
+        )
 
     def test_http_rejected(self):
         with pytest.raises(ValidationError, match="https://"):
@@ -95,7 +101,10 @@ class TestValidatePath:
 class TestValidateCommitId:
     def test_valid(self):
         assert validate_commit_id("abc123") == "abc123"
-        assert validate_commit_id("abc123def456789012345678901234567890abcd") == "abc123def456789012345678901234567890abcd"
+        assert (
+            validate_commit_id("abc123def456789012345678901234567890abcd")
+            == "abc123def456789012345678901234567890abcd"
+        )
 
     def test_invalid(self):
         with pytest.raises(ValidationError):

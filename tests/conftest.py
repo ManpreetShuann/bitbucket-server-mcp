@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 import respx
-from httpx import Response
 
 from bitbucket_mcp.client import BitbucketClient
 
@@ -24,7 +23,10 @@ def client():
 
 # -- Sample response factories --
 
-def paged_response(values: list, is_last: bool = True, start: int = 0, limit: int = 25) -> dict:
+
+def paged_response(
+    values: list, is_last: bool = True, start: int = 0, limit: int = 25
+) -> dict:
     resp: dict = {
         "size": len(values),
         "limit": limit,
@@ -52,7 +54,14 @@ SAMPLE_REPO = {
     "name": "my-repo",
     "state": "AVAILABLE",
     "project": SAMPLE_PROJECT,
-    "links": {"clone": [{"href": "https://bitbucket.example.com/scm/proj/my-repo.git", "name": "http"}]},
+    "links": {
+        "clone": [
+            {
+                "href": "https://bitbucket.example.com/scm/proj/my-repo.git",
+                "name": "http",
+            }
+        ]
+    },
 }
 
 SAMPLE_BRANCH = {
@@ -82,7 +91,13 @@ SAMPLE_PR = {
     "toRef": {"id": "refs/heads/main", "displayId": "main"},
     "author": {"user": {"name": "dev"}},
     "reviewers": [],
-    "links": {"self": [{"href": "https://bitbucket.example.com/projects/PROJ/repos/my-repo/pull-requests/1"}]},
+    "links": {
+        "self": [
+            {
+                "href": "https://bitbucket.example.com/projects/PROJ/repos/my-repo/pull-requests/1"
+            }
+        ]
+    },
 }
 
 SAMPLE_COMMENT = {

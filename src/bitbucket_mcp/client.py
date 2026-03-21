@@ -20,7 +20,9 @@ logger = logging.getLogger("bitbucket_mcp.client")
 class BitbucketAPIError(Exception):
     """Structured error raised when the Bitbucket API returns a 4xx/5xx."""
 
-    def __init__(self, status_code: int, message: str, errors: list[dict] | None = None):
+    def __init__(
+        self, status_code: int, message: str, errors: list[dict] | None = None
+    ):
         self.status_code = status_code
         self.message = message
         self.errors = errors or []
@@ -53,14 +55,22 @@ class BitbucketClient:
         response = await self._client.get(f"/rest/api/1.0{path}", params=params)
         return self._handle_response(response)
 
-    async def post(self, path: str, json_data: dict | None = None, params: dict | None = None) -> dict:
+    async def post(
+        self, path: str, json_data: dict | None = None, params: dict | None = None
+    ) -> dict:
         logger.debug("POST /rest/api/1.0%s", path)
-        response = await self._client.post(f"/rest/api/1.0{path}", json=json_data, params=params)
+        response = await self._client.post(
+            f"/rest/api/1.0{path}", json=json_data, params=params
+        )
         return self._handle_response(response)
 
-    async def put(self, path: str, json_data: dict | None = None, params: dict | None = None) -> dict:
+    async def put(
+        self, path: str, json_data: dict | None = None, params: dict | None = None
+    ) -> dict:
         logger.debug("PUT /rest/api/1.0%s", path)
-        response = await self._client.put(f"/rest/api/1.0{path}", json=json_data, params=params)
+        response = await self._client.put(
+            f"/rest/api/1.0{path}", json=json_data, params=params
+        )
         return self._handle_response(response)
 
     async def delete(self, path: str, params: dict | None = None) -> dict:
@@ -96,10 +106,14 @@ class BitbucketClient:
         response = await self._client.get("/rest/search/latest/search", params=params)
         if response.status_code == 405:
             logger.debug("GET returned 405, retrying as POST with JSON body")
-            response = await self._client.post("/rest/search/latest/search", json=params)
+            response = await self._client.post(
+                "/rest/search/latest/search", json=params
+            )
         return self._handle_response(response)
 
-    async def get_paged(self, path: str, params: dict | None = None, start: int = 0, limit: int = 25) -> dict:
+    async def get_paged(
+        self, path: str, params: dict | None = None, start: int = 0, limit: int = 25
+    ) -> dict:
         from bitbucket_mcp.validation import clamp_limit, clamp_start
 
         p = dict(params) if params else {}
@@ -112,7 +126,12 @@ class BitbucketClient:
             # 5xx errors: return a generic message instead of leaking internal
             # server details (stack traces, class names) to the MCP caller.
             if response.status_code >= 500:
-                logger.warning("Server error %d for %s %s", response.status_code, response.request.method, response.request.url.path)
+                logger.warning(
+                    "Server error %d for %s %s",
+                    response.status_code,
+                    response.request.method,
+                    response.request.url.path,
+                )
                 raise BitbucketAPIError(
                     response.status_code,
                     f"Bitbucket server error ({response.status_code}). Check server logs for details.",
@@ -120,7 +139,11 @@ class BitbucketClient:
             try:
                 body = response.json()
                 errors = body.get("errors", [])
-                message = "; ".join(e.get("message", "") for e in errors) if errors else "Request failed"
+                message = (
+                    "; ".join(e.get("message", "") for e in errors)
+                    if errors
+                    else "Request failed"
+                )
             except Exception:
                 errors = []
                 message = "Request failed"

@@ -51,7 +51,9 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 params["role"] = validate_pr_role(role)
             if closed_since is not None:
                 if closed_since < 0:
-                    raise ValidationError("closed_since must be a non-negative epoch timestamp in milliseconds")
+                    raise ValidationError(
+                        "closed_since must be a non-negative epoch timestamp in milliseconds"
+                    )
                 params["closedSince"] = closed_since
 
             result = await client.get_paged(
