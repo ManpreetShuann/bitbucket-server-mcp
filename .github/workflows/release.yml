@@ -50,7 +50,7 @@ jobs:
       - name: Python Semantic Release — Determine version
         id: semver
         run: |
-          OUTPUT=$(semantic-release version --noop --print 2>&1) || true
+          OUTPUT=$(semantic-release version --print 2>/dev/null) || true
           echo "new_version=$OUTPUT" >> "$GITHUB_OUTPUT"
           if [ -z "$OUTPUT" ]; then
             echo "released=false" >> "$GITHUB_OUTPUT"
