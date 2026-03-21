@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: master
 
       - name: Check for release commit
         id: skip
