@@ -64,7 +64,7 @@ jobs:
         if: steps.skip.outputs.is_release != 'true'
         id: semver
         run: |
-          OUTPUT=$(semantic-release --noop version --print 2>&1) || true
+          OUTPUT=$(semantic-release version --print 2>&1) || true
           # --print outputs the next version number or nothing if no release needed
           # Filter to only a valid semver line (digits and dots)
           VERSION=$(echo "$OUTPUT" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' | tail -1)
