@@ -6,7 +6,7 @@ license = "MIT"
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [
-    { name = "Manpreet Shuan" },
+    { name = "Manpreet Shuann" },
 ]
 keywords = ["mcp", "bitbucket", "bitbucket-server", "model-context-protocol", "llm", "ai"]
 classifiers = [
