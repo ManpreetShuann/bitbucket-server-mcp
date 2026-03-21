@@ -13,8 +13,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    # Only run when CI succeeds
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only run when CI succeeds and the commit is not a release commit
+    if: github.event.workflow_run.conclusion == 'success' && !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):')
 
     environment:
       name: pypi
