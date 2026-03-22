@@ -112,18 +112,45 @@ class BitbucketClient:
         Elasticsearch) and uses ``/rest/search/latest/`` instead of the
         standard ``/rest/api/1.0/`` prefix.
 
-        Tries GET first (older Bitbucket Server versions), and falls back
-        to POST if the server returns 405 (newer Bitbucket Data Center
-        versions use POST with a JSON body).
+        Tries POST first (Bitbucket Data Center 7.x+ uses POST with a
+        JSON body containing an ``entities`` structure), and falls back
+        to GET with flat query parameters for older Bitbucket Server
+        versions that return 405 on POST.
         """
-        logger.debug("GET /rest/search/latest/search params=%s", params)
-        response = await self._client.get("/rest/search/latest/search", params=params)
+        post_body = self._build_search_post_body(params)
+        logger.debug("POST /rest/search/latest/search body=%s", post_body)
+        response = await self._client.post(
+            "/rest/search/latest/search", json=post_body
+        )
         if response.status_code == 405:
-            logger.debug("GET returned 405, retrying as POST with JSON body")
-            response = await self._client.post(
-                "/rest/search/latest/search", json=params
+            logger.debug("POST returned 405, retrying as GET with query params")
+            response = await self._client.get(
+                "/rest/search/latest/search", params=params
             )
         return self._handle_response(response)
+
+    @staticmethod
+    def _build_search_post_body(params: dict) -> dict:
+        """Convert flat search params into the Data Center POST body format.
+
+        The newer Bitbucket Data Center POST API expects::
+
+            {
+              "query": "search terms",
+              "entities": {"code": {"start": 0, "limit": 25}},
+              "limits": {"primary": 25, "secondary": 10}
+            }
+
+        Project/repo filtering is done via Bitbucket search-syntax
+        qualifiers embedded in the query string (e.g. ``project:KEY``).
+        """
+        query = params.get("query", "")
+        limit = params.get("limit", 25)
+        return {
+            "query": query,
+            "entities": {"code": {"start": 0, "limit": limit}},
+            "limits": {"primary": limit, "secondary": 10},
+        }
 
     async def get_paged(
         self, path: str, params: dict | None = None, start: int = 0, limit: int = 25

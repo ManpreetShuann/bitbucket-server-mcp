@@ -170,15 +170,29 @@ class TestGetRaw:
 
 
 class TestSearch:
-    async def test_search_success(
+    async def test_search_success_post(
+        self, client: BitbucketClient, mock_router: respx.MockRouter
+    ):
+        data = {"code": {"values": [{"file": "test.py"}], "count": 1}}
+        mock_router.post("/rest/search/latest/search").mock(
+            return_value=Response(200, json=data)
+        )
+        result = await client.search({"query": "hello", "type": "content", "limit": 25})
+        assert result == data
+
+    async def test_search_falls_back_to_get_on_405(
         self, client: BitbucketClient, mock_router: respx.MockRouter
     ):
         data = {"values": [{"file": "test.py"}]}
-        mock_router.get("/rest/search/latest/search").mock(
+        mock_router.post("/rest/search/latest/search").mock(
+            return_value=Response(405)
+        )
+        get_route = mock_router.get("/rest/search/latest/search").mock(
             return_value=Response(200, json=data)
         )
-        result = await client.search({"query": "hello", "type": "content"})
+        result = await client.search({"query": "hello", "type": "content", "limit": 25})
         assert result == data
+        assert get_route.called
 
 
 class TestGetPaged:
