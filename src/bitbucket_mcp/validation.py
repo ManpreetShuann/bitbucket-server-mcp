@@ -34,9 +34,10 @@ _COMMIT_ID_RE = re.compile(r"^[0-9a-fA-F]{4,40}$")
 
 # Branch and tag names: alphanumeric start, then alphanumeric + dots, slashes,
 # hyphens, underscores.  Slashes allow nested names like "feature/foo" or
-# "release/v1.0".  Max 256 chars to prevent abuse.
-_BRANCH_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
-_TAG_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
+# "release/v1.0".  Max 256 chars to prevent abuse. Empty segments ("//") and
+# trailing slashes are rejected to match Git ref-name rules.
+_BRANCH_NAME_RE = re.compile(r"^(?!.*//)(?!.*/$)[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
+_TAG_NAME_RE = re.compile(r"^(?!.*//)(?!.*/$)[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
 
 # Hard ceilings used by clamp functions to prevent abuse via absurdly large
 # pagination requests or diff context windows.

@@ -166,6 +166,14 @@ class TestValidateBranchName:
         with pytest.raises(ValidationError):
             validate_branch_name("-starts-with-hyphen")
 
+    def test_rejects_double_slashes(self):
+        with pytest.raises(ValidationError):
+            validate_branch_name("feature//x")
+
+    def test_rejects_trailing_slash(self):
+        with pytest.raises(ValidationError):
+            validate_branch_name("feature/")
+
 
 class TestValidateTagName:
     def test_valid_names(self):
@@ -180,3 +188,11 @@ class TestValidateTagName:
             validate_tag_name("../escape")
         with pytest.raises(ValidationError):
             validate_tag_name("foo/../bar")
+
+    def test_rejects_double_slashes(self):
+        with pytest.raises(ValidationError):
+            validate_tag_name("release//v1")
+
+    def test_rejects_trailing_slash(self):
+        with pytest.raises(ValidationError):
+            validate_tag_name("release/")
