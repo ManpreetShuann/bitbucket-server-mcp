@@ -1,8 +1,9 @@
 """MCP tools for Bitbucket Server pull-request operations.
 
-The largest tool module — exposes CRUD for pull requests, merge/decline/reopen
-actions, approval workflow, diff retrieval, commit listing, activity feeds,
-comment management (including inline/anchor comments), tasks, and participant
+The largest tool module — exposes CRUD for pull requests, draft PR workflow
+(create draft, publish, convert to draft), merge/decline/reopen actions,
+approval workflow, diff retrieval, commit listing, activity feeds, comment
+management (including inline/anchor comments), tasks, and participant
 management.
 """
 
@@ -241,6 +242,155 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
 
             if draft is not None:
                 body["draft"] = draft
+
+            result = await client.put(pr_endpoint, json_data=body)
+            return json.dumps(result, indent=2)
+        except (BitbucketAPIError, ValidationError) as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Unexpected error: {e}"
+
+    # ------------------------------------------------------------------
+    # Draft PR workflow
+    # ------------------------------------------------------------------
+
+    @mcp.tool()
+    async def create_draft_pull_request(
+        project_key: str,
+        repo_slug: str,
+        title: str,
+        source_branch: str,
+        target_branch: str,
+        description: str = "",
+        reviewers: list[str] | None = None,
+    ) -> str:
+        """Create a new pull request in draft mode.
+
+        Draft PRs are not yet ready for review. Use publish_draft_pull_request
+        to publish when ready. Branch names should be bare (e.g., 'feature/x'),
+        the 'refs/heads/' prefix is added automatically.
+
+        Args:
+            project_key: The project key.
+            repo_slug: The repository slug.
+            title: Title of the pull request.
+            source_branch: Source branch name (e.g., 'feature/my-feature').
+            target_branch: Target branch name (e.g., 'main').
+            description: Optional description/body for the pull request.
+            reviewers: Optional list of reviewer usernames.
+        """
+        try:
+            validate_project_key(project_key)
+            validate_repo_slug(repo_slug)
+            from_ref = (
+                source_branch
+                if source_branch.startswith("refs/")
+                else f"refs/heads/{source_branch}"
+            )
+            to_ref = (
+                target_branch
+                if target_branch.startswith("refs/")
+                else f"refs/heads/{target_branch}"
+            )
+
+            body: dict = {
+                "title": title,
+                "description": description,
+                "draft": True,
+                "fromRef": {
+                    "id": from_ref,
+                    "repository": {
+                        "slug": repo_slug,
+                        "project": {"key": project_key},
+                    },
+                },
+                "toRef": {
+                    "id": to_ref,
+                    "repository": {
+                        "slug": repo_slug,
+                        "project": {"key": project_key},
+                    },
+                },
+            }
+            if reviewers:
+                body["reviewers"] = [{"user": {"name": r}} for r in reviewers]
+
+            result = await client.post(
+                f"/projects/{project_key}/repos/{repo_slug}/pull-requests",
+                json_data=body,
+            )
+            return json.dumps(result, indent=2)
+        except (BitbucketAPIError, ValidationError) as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Unexpected error: {e}"
+
+    @mcp.tool()
+    async def publish_draft_pull_request(
+        project_key: str,
+        repo_slug: str,
+        pr_id: int,
+        version: int,
+    ) -> str:
+        """Publish a draft pull request, making it ready for review.
+
+        The version parameter is required for optimistic locking.
+        Get it from get_pull_request.
+
+        Args:
+            project_key: The project key.
+            repo_slug: The repository slug.
+            pr_id: The pull request ID.
+            version: Current version of the PR (required for optimistic locking).
+        """
+        try:
+            pr_endpoint = _pr_path(project_key, repo_slug, pr_id)
+            current = await client.get(pr_endpoint)
+
+            body: dict = {
+                "version": version,
+                "title": current.get("title", ""),
+                "draft": False,
+                "toRef": current.get("toRef", {}),
+                "reviewers": current.get("reviewers", []),
+            }
+
+            result = await client.put(pr_endpoint, json_data=body)
+            return json.dumps(result, indent=2)
+        except (BitbucketAPIError, ValidationError) as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Unexpected error: {e}"
+
+    @mcp.tool()
+    async def convert_to_draft(
+        project_key: str,
+        repo_slug: str,
+        pr_id: int,
+        version: int,
+    ) -> str:
+        """Convert an open pull request back to draft mode.
+
+        The version parameter is required for optimistic locking.
+        Get it from get_pull_request.
+
+        Args:
+            project_key: The project key.
+            repo_slug: The repository slug.
+            pr_id: The pull request ID.
+            version: Current version of the PR (required for optimistic locking).
+        """
+        try:
+            pr_endpoint = _pr_path(project_key, repo_slug, pr_id)
+            current = await client.get(pr_endpoint)
+
+            body: dict = {
+                "version": version,
+                "title": current.get("title", ""),
+                "draft": True,
+                "toRef": current.get("toRef", {}),
+                "reviewers": current.get("reviewers", []),
+            }
 
             result = await client.put(pr_endpoint, json_data=body)
             return json.dumps(result, indent=2)

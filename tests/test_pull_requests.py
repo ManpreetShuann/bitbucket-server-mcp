@@ -827,3 +827,101 @@ class TestUpdatePullRequestTask:
         )
         assert "Error" in result
         assert "Invalid task state" in result
+
+
+class TestCreateDraftPullRequest:
+    async def test_creates_draft_pr(self, setup):
+        _, tools = setup
+        draft_pr = {**SAMPLE_PR, "id": 3, "title": "Draft PR", "draft": True}
+        with respx.mock(base_url=BASE_URL) as router:
+            route = router.post(f"{PR_PREFIX}").mock(
+                return_value=Response(201, json=draft_pr)
+            )
+            result = await tools["create_draft_pull_request"](
+                project_key="PROJ",
+                repo_slug="my-repo",
+                title="Draft PR",
+                source_branch="feature/wip",
+                target_branch="main",
+            )
+        parsed = json.loads(result)
+        assert parsed["draft"] is True
+        body = json.loads(route.calls[0].request.content)
+        assert body["draft"] is True
+        assert body["fromRef"]["id"] == "refs/heads/feature/wip"
+
+    async def test_creates_draft_with_reviewers(self, setup):
+        _, tools = setup
+        draft_pr = {**SAMPLE_PR, "id": 4, "draft": True}
+        with respx.mock(base_url=BASE_URL) as router:
+            route = router.post(f"{PR_PREFIX}").mock(
+                return_value=Response(201, json=draft_pr)
+            )
+            await tools["create_draft_pull_request"](
+                project_key="PROJ",
+                repo_slug="my-repo",
+                title="Draft",
+                source_branch="feature/x",
+                target_branch="main",
+                reviewers=["alice"],
+            )
+        body = json.loads(route.calls[0].request.content)
+        assert body["reviewers"][0]["user"]["name"] == "alice"
+
+
+class TestPublishDraftPullRequest:
+    async def test_publishes_draft(self, setup):
+        _, tools = setup
+        current_pr = {**SAMPLE_PR, "draft": True}
+        published_pr = {**SAMPLE_PR, "draft": False, "version": 1}
+        with respx.mock(base_url=BASE_URL) as router:
+            router.get(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=current_pr)
+            )
+            route = router.put(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=published_pr)
+            )
+            result = await tools["publish_draft_pull_request"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0
+            )
+        parsed = json.loads(result)
+        assert parsed["draft"] is False
+        body = json.loads(route.calls[0].request.content)
+        assert body["draft"] is False
+        assert body["version"] == 0
+
+    async def test_invalid_pr_id(self, setup):
+        _, tools = setup
+        result = await tools["publish_draft_pull_request"](
+            project_key="PROJ", repo_slug="my-repo", pr_id=-1, version=0
+        )
+        assert "Error" in result
+
+
+class TestConvertToDraft:
+    async def test_converts_to_draft(self, setup):
+        _, tools = setup
+        current_pr = {**SAMPLE_PR, "draft": False}
+        converted_pr = {**SAMPLE_PR, "draft": True, "version": 1}
+        with respx.mock(base_url=BASE_URL) as router:
+            router.get(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=current_pr)
+            )
+            route = router.put(f"{PR_PREFIX}/1").mock(
+                return_value=Response(200, json=converted_pr)
+            )
+            result = await tools["convert_to_draft"](
+                project_key="PROJ", repo_slug="my-repo", pr_id=1, version=0
+            )
+        parsed = json.loads(result)
+        assert parsed["draft"] is True
+        body = json.loads(route.calls[0].request.content)
+        assert body["draft"] is True
+        assert body["version"] == 0
+
+    async def test_invalid_pr_id(self, setup):
+        _, tools = setup
+        result = await tools["convert_to_draft"](
+            project_key="PROJ", repo_slug="my-repo", pr_id=0, version=0
+        )
+        assert "Error" in result
