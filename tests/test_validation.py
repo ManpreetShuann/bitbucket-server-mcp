@@ -8,11 +8,13 @@ from bitbucket_mcp.validation import (
     clamp_limit,
     clamp_start,
     validate_base_url,
+    validate_branch_name,
     validate_commit_id,
     validate_path,
     validate_positive_int,
     validate_project_key,
     validate_repo_slug,
+    validate_tag_name,
 )
 
 
@@ -143,3 +145,38 @@ class TestClampFunctions:
         assert clamp_context_lines(10) == 10
         assert clamp_context_lines(-5) == 0
         assert clamp_context_lines(999) == 100
+
+
+class TestValidateBranchName:
+    def test_valid_names(self):
+        assert validate_branch_name("main") == "main"
+        assert validate_branch_name("feature/my-branch") == "feature/my-branch"
+        assert validate_branch_name("release/v1.0.0") == "release/v1.0.0"
+        assert validate_branch_name("fix_bug-123") == "fix_bug-123"
+
+    def test_invalid_names(self):
+        with pytest.raises(ValidationError):
+            validate_branch_name("")
+        with pytest.raises(ValidationError):
+            validate_branch_name("../escape")
+        with pytest.raises(ValidationError):
+            validate_branch_name("foo/../bar")
+        with pytest.raises(ValidationError):
+            validate_branch_name("/leading-slash")
+        with pytest.raises(ValidationError):
+            validate_branch_name("-starts-with-hyphen")
+
+
+class TestValidateTagName:
+    def test_valid_names(self):
+        assert validate_tag_name("v1.0.0") == "v1.0.0"
+        assert validate_tag_name("release/2024/q1") == "release/2024/q1"
+        assert validate_tag_name("v1.0.0-rc.1") == "v1.0.0-rc.1"
+
+    def test_invalid_names(self):
+        with pytest.raises(ValidationError):
+            validate_tag_name("")
+        with pytest.raises(ValidationError):
+            validate_tag_name("../escape")
+        with pytest.raises(ValidationError):
+            validate_tag_name("foo/../bar")

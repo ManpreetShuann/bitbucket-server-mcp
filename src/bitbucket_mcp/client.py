@@ -78,6 +78,20 @@ class BitbucketClient:
         response = await self._client.delete(f"/rest/api/1.0{path}", params=params)
         return self._handle_response(response)
 
+    async def post_absolute(
+        self, path: str, json_data: dict | None = None, params: dict | None = None
+    ) -> dict:
+        """POST to an absolute REST path (not prefixed with /rest/api/1.0)."""
+        logger.debug("POST %s", path)
+        response = await self._client.post(path, json=json_data, params=params)
+        return self._handle_response(response)
+
+    async def delete_absolute(self, path: str, params: dict | None = None) -> dict:
+        """DELETE to an absolute REST path (not prefixed with /rest/api/1.0)."""
+        logger.debug("DELETE %s", path)
+        response = await self._client.delete(path, params=params)
+        return self._handle_response(response)
+
     async def get_raw(self, path: str, params: dict | None = None) -> str:
         """Fetch raw file content as plain text (not JSON).
 

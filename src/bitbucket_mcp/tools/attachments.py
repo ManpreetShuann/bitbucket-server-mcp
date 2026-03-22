@@ -1,7 +1,8 @@
 """MCP tools for Bitbucket Server repository attachments.
 
-Read-only access to attachments and metadata management. No deletion
-operations, consistent with the project's design constraint.
+Read-only access to attachments and metadata management. Deletion
+operations for attachments are in the ``dangerous`` module, gated
+behind the BITBUCKET_ALLOW_DANGEROUS_DELETE environment variable.
 """
 
 from __future__ import annotations

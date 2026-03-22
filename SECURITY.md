@@ -95,9 +95,18 @@ Clamp functions (`clamp_limit`, `clamp_start`, `clamp_context_lines`) silently c
 
 ## Design Constraints
 
-### No deletion operations
+### Deletion operations (opt-in, environment-variable gated)
 
-This is a **deliberate security constraint**. The server does not expose any tool that deletes resources (projects, repos, branches, PRs, comments, etc.). This limits the blast radius of both accidental and malicious tool invocations.
+By default, no deletion tools are registered. When enabled via environment variables, delete tools become available to MCP clients. Two tiers exist:
+
+| Tier | Env Var | Tools | Risk |
+|------|---------|-------|------|
+| **Dangerous** | `BITBUCKET_ALLOW_DANGEROUS_DELETE=1` | `delete_branch`, `delete_tag`, `delete_pull_request`, `delete_pull_request_comment`, `delete_pull_request_task`, `delete_attachment`, `delete_attachment_metadata` | High — deletes individual resources |
+| **Destructive** | `BITBUCKET_ALLOW_DESTRUCTIVE_DELETE=1` | `delete_project`, `delete_repository` | Very High — deletes top-level containers and all contents |
+
+**Layered gate**: Destructive tools require **both** env vars set (`DANGEROUS=1` AND `DESTRUCTIVE=1`). Setting only `DESTRUCTIVE=1` has no effect and logs a warning.
+
+**Invisible when disabled**: When env vars are not set, the tools are not registered with the MCP server. They do not appear in tool listings and cannot be invoked — there is zero attack surface.
 
 ### Optimistic locking
 
@@ -165,6 +174,6 @@ All log output goes to **stderr** — stdout is reserved for MCP JSON-RPC traffi
 - [ ] No unsafe deserialisation (`pickle`, unsafe YAML, `marshal`)
 - [ ] 5xx errors are sanitised via `_handle_response()`
 - [ ] Token is never logged or exposed
-- [ ] No deletion operations added
+- [ ] Deletion operations are gated behind the appropriate environment variable tier
 - [ ] Tests cover error paths
 - [ ] State-changing tools require a `version` parameter

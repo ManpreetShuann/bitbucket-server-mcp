@@ -206,6 +206,55 @@ class TestHandleResponse204:
         assert result == {}
 
 
+class TestPostAbsolute:
+    async def test_does_not_prepend_rest_api(
+        self, client: BitbucketClient, mock_router: respx.MockRouter
+    ):
+        mock_router.post(
+            "/rest/branch-utils/1.0/projects/PROJ/repos/repo/branches"
+        ).mock(return_value=Response(204))
+        result = await client.post_absolute(
+            "/rest/branch-utils/1.0/projects/PROJ/repos/repo/branches",
+            json_data={"name": "feature/x", "dryRun": False},
+        )
+        assert result == {}
+
+    async def test_post_absolute_with_json(
+        self, client: BitbucketClient, mock_router: respx.MockRouter
+    ):
+        data = {"id": 1}
+        mock_router.post("/rest/branch-utils/1.0/test").mock(
+            return_value=Response(200, json=data)
+        )
+        result = await client.post_absolute(
+            "/rest/branch-utils/1.0/test", json_data={"key": "value"}
+        )
+        assert result == data
+
+
+class TestDeleteAbsolute:
+    async def test_does_not_prepend_rest_api(
+        self, client: BitbucketClient, mock_router: respx.MockRouter
+    ):
+        mock_router.delete("/rest/git/1.0/projects/PROJ/repos/repo/tags/v1.0").mock(
+            return_value=Response(204)
+        )
+        result = await client.delete_absolute(
+            "/rest/git/1.0/projects/PROJ/repos/repo/tags/v1.0"
+        )
+        assert result == {}
+
+    async def test_delete_absolute_error(
+        self, client: BitbucketClient, mock_router: respx.MockRouter
+    ):
+        error_body = {"errors": [{"message": "Not found"}]}
+        mock_router.delete("/rest/git/1.0/fail").mock(
+            return_value=Response(404, json=error_body)
+        )
+        with pytest.raises(BitbucketAPIError):
+            await client.delete_absolute("/rest/git/1.0/fail")
+
+
 class TestBitbucketAPIError:
     def test_str_representation(self):
         err = BitbucketAPIError(404, "Not found")

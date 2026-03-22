@@ -8,6 +8,8 @@ Environment variables:
     BITBUCKET_URL       — Base URL of the Bitbucket Server instance (required).
     BITBUCKET_TOKEN     — Personal-access / HTTP-access token (required).
     BITBUCKET_LOG_LEVEL — Logging level: DEBUG, INFO, WARNING, ERROR (default: INFO).
+    BITBUCKET_ALLOW_DANGEROUS_DELETE  — Set to "1" to enable dangerous delete tools (optional).
+    BITBUCKET_ALLOW_DESTRUCTIVE_DELETE — Set to "1" to enable destructive delete tools (optional, requires DANGEROUS).
 """
 
 from __future__ import annotations
@@ -25,7 +27,9 @@ from bitbucket_mcp.tools import (
     attachments,
     branches,
     commits,
+    dangerous,
     dashboard,
+    destructive,
     files,
     projects,
     pull_requests,
@@ -118,6 +122,33 @@ def main() -> None:
     search.register_tools(mcp, client)
     users.register_tools(mcp, client)
     attachments.register_tools(mcp, client)
+
+    # --- Conditional registration of delete tools ---
+    # These are gated behind environment variables. When not set, the tools
+    # are not registered and are invisible to MCP clients.
+    allow_dangerous = os.environ.get("BITBUCKET_ALLOW_DANGEROUS_DELETE") == "1"
+    allow_destructive = os.environ.get("BITBUCKET_ALLOW_DESTRUCTIVE_DELETE") == "1"
+
+    if allow_dangerous:
+        logger.warning(
+            "Dangerous delete tools ENABLED (BITBUCKET_ALLOW_DANGEROUS_DELETE=1)"
+        )
+        dangerous.register_tools(mcp, client)
+
+    if allow_destructive:
+        if not allow_dangerous:
+            logger.warning(
+                "BITBUCKET_ALLOW_DESTRUCTIVE_DELETE=1 is set but "
+                "BITBUCKET_ALLOW_DANGEROUS_DELETE is not. "
+                "Destructive delete tools will NOT be registered."
+            )
+        else:
+            logger.warning(
+                "Destructive delete tools ENABLED "
+                "(BITBUCKET_ALLOW_DESTRUCTIVE_DELETE=1 "
+                "+ BITBUCKET_ALLOW_DANGEROUS_DELETE=1)"
+            )
+            destructive.register_tools(mcp, client)
 
     # Starts the MCP server on stdio transport (stdin/stdout JSON-RPC).
     mcp.run()

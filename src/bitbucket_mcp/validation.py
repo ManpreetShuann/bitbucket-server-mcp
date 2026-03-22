@@ -32,6 +32,12 @@ _REPO_SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 # SHAs while still rejecting obviously invalid input like empty strings.
 _COMMIT_ID_RE = re.compile(r"^[0-9a-fA-F]{4,40}$")
 
+# Branch and tag names: alphanumeric start, then alphanumeric + dots, slashes,
+# hyphens, underscores.  Slashes allow nested names like "feature/foo" or
+# "release/v1.0".  Max 256 chars to prevent abuse.
+_BRANCH_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
+_TAG_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/\-]{0,255}$")
+
 # Hard ceilings used by clamp functions to prevent abuse via absurdly large
 # pagination requests or diff context windows.
 MAX_LIMIT = 1000
@@ -108,6 +114,32 @@ def validate_positive_int(value: int, name: str) -> int:
     if value <= 0:
         raise ValidationError(f"{name} must be a positive integer, got {value}")
     return value
+
+
+def validate_branch_name(name: str) -> str:
+    """Validate a branch name for use in API requests."""
+    if not _BRANCH_NAME_RE.match(name):
+        raise ValidationError(
+            f"Invalid branch name: {name!r}. Must start with alphanumeric, contain only [A-Za-z0-9._/-], max 256 chars."
+        )
+    for segment in name.split("/"):
+        if segment == "..":
+            raise ValidationError(
+                "Branch name must not contain path traversal segments"
+            )
+    return name
+
+
+def validate_tag_name(name: str) -> str:
+    """Validate a tag name for use in URL paths."""
+    if not _TAG_NAME_RE.match(name):
+        raise ValidationError(
+            f"Invalid tag name: {name!r}. Must start with alphanumeric, contain only [A-Za-z0-9._/-], max 256 chars."
+        )
+    for segment in name.split("/"):
+        if segment == "..":
+            raise ValidationError("Tag name must not contain path traversal segments")
+    return name
 
 
 # --- Enum validators ---
