@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v1.6.1 (2026-03-23)
+
+### Bug Fixes
+
+- Address Copilot review — clean separation of POST vs GET params
+  ([`e075576`](https://github.com/ManpreetShuann/bitbucket-server-mcp/commit/e075576daaedd216da949951fc21159cdf5df552))
+
+- Use correct Data Center POST body format for code search API
+  ([`0b6726b`](https://github.com/ManpreetShuann/bitbucket-server-mcp/commit/0b6726bff9e58b87f92770154804df8d5d221299))
+
+
 ## v1.6.0 (2026-03-22)
 
 ### Bug Fixes
