@@ -7,11 +7,10 @@ behind the BITBUCKET_ALLOW_DANGEROUS_DELETE environment variable.
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     validate_positive_int,
@@ -58,6 +57,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         project_key: str,
         repo_slug: str,
         attachment_id: int,
+        fields: str = "",
     ) -> str:
         """Retrieve the metadata (JSON) associated with an attachment.
 
@@ -71,7 +71,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             result = await client.get(
                 f"{_repo_path(project_key, repo_slug)}/attachments/{attachment_id}/metadata"
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -83,6 +83,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         repo_slug: str,
         attachment_id: int,
         metadata: str,
+        fields: str = "",
     ) -> str:
         """Create or update metadata for an attachment.
 
@@ -105,7 +106,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 f"{_repo_path(project_key, repo_slug)}/attachments/{attachment_id}/metadata",
                 json_data=meta_dict,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
