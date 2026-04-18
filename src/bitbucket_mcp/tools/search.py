@@ -26,11 +26,10 @@ If the Elasticsearch plugin is not installed, the search endpoint returns
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     validate_project_key,
@@ -68,6 +67,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         project_key: str = "",
         repo_slug: str = "",
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """Search for code across repositories using Bitbucket Server's code search.
 
@@ -78,6 +78,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             project_key: Optional project key to restrict search scope.
             repo_slug: Optional repository slug to restrict search (requires project_key).
             limit: Maximum number of results (default 25, max 1000).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             if project_key:
@@ -96,7 +97,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if repo_slug:
                 params["repository.slug"] = repo_slug
             result = await client.search(params)
-            return json.dumps(_normalise_response(result), indent=2)
+            return json_dumps(_normalise_response(result), fields, indent=2)
         except BitbucketAPIError as e:
             if e.status_code in (404, 405):
                 return "Code search is not available on this Bitbucket Server instance. Ensure Elasticsearch/code search is enabled."
@@ -112,6 +113,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         project_key: str = "",
         repo_slug: str = "",
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """Find files by name or path pattern using Bitbucket Server's code search.
 
@@ -122,6 +124,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             project_key: Optional project key to restrict search scope.
             repo_slug: Optional repository slug to restrict search (requires project_key).
             limit: Maximum number of results (default 25, max 1000).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             if project_key:
@@ -140,7 +143,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             if repo_slug:
                 params["repository.slug"] = repo_slug
             result = await client.search(params)
-            return json.dumps(_normalise_response(result), indent=2)
+            return json_dumps(_normalise_response(result), fields, indent=2)
         except BitbucketAPIError as e:
             if e.status_code in (404, 405):
                 return "File search is not available on this Bitbucket Server instance. Ensure Elasticsearch/code search is enabled."

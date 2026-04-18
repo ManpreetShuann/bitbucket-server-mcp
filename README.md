@@ -50,6 +50,8 @@ Set two required environment variables (plus optional ones):
 | `BITBUCKET_URL` | Yes | Base URL of your Bitbucket Server (e.g., `https://bitbucket.yourcompany.com`). Must use HTTPS. |
 | `BITBUCKET_TOKEN` | Yes | HTTP access token (create in Bitbucket > User Settings > HTTP Access Tokens) |
 | `BITBUCKET_LOG_LEVEL` | No | Log level for stderr output: `DEBUG`, `INFO`, `WARNING`, `ERROR` (default: `INFO`) |
+| `BITBUCKET_CONVERT_TIMESTAMPS` | No | Set to `true` to convert Unix epoch millisecond timestamps (e.g. `createdDate`, `updatedDate`) to human-readable local-time strings (`yyyy-MM-dd HH:mm:ss`). Default: `false` (raw epoch values are returned). |
+| `BITBUCKET_SSL_VERIFY` | No | Set to `false` to disable SSL certificate verification (e.g. for self-signed certificates). Default: `true`. |
 | `BITBUCKET_ALLOW_DANGEROUS_DELETE` | No | Set to `1` to enable Tier-1 delete tools (branch, tag, PR, comment, task, attachment) |
 | `BITBUCKET_ALLOW_DESTRUCTIVE_DELETE` | No | Set to `1` to enable Tier-2 delete tools (project, repository). Requires `BITBUCKET_ALLOW_DANGEROUS_DELETE=1` |
 
@@ -448,6 +450,44 @@ See [CONTRIBUTING.md](https://github.com/ManpreetShuann/bitbucket-server-mcp/blo
 ## Pagination
 
 All list tools accept `start` (default 0) and `limit` (default 25) parameters. Responses include `isLastPage` and `nextPageStart` for fetching subsequent pages.
+
+## Fields Filtering
+
+Most list and get tools accept an optional `fields` parameter. Atlassian Bitbucket Server / Data Center (Enterprise) does not support filtering in their REST API. Therefore filtering is implemented in the MCP server and is performed on the REST response. It lets you limit the response to only the properties you need, which reduces LLM tokens and speeds up processing — especially useful for large result sets like PR lists.
+
+### Syntax
+
+The `fields` parameter uses Atlassian's dot-notation filter syntax:
+
+- **Top-level field:** `id`
+- **Nested field:** `author.user.displayName`
+- **Multiple fields (comma-separated):** `id,title,state`
+- **Fields inside a list response:** prefix with `values.` — e.g. `values.id,values.title`
+
+Supported `fields` syntax (comma-separated list of directives):
+
+* `field.path`   – exclusive selection: keep only the listed paths, drop everything else
+* `-field.path`  – removal: keep all fields except the specified path
+* `+field.path`  – addition: keep all default fields AND add the specified extra path
+* `*`            – wildcard: matches all keys at that level (e.g. ``-links.*``)
+
+Modes can be mixed, e.g.:
+
+```
+-links.*,+values.author.user.displayName
+```
+
+### Examples
+
+**List pull requests — overview only:**
+```
+values.id,values.title,values.state,values.author.user.displayName,values.fromRef.displayId,values.toRef.displayId,values.createdDate,values.updatedDate
+```
+
+### Notes
+
+- Omitting `fields` returns the full Bitbucket REST API response for that endpoint.
+- Fields not present in the response are silently ignored.
 
 ## Security
  

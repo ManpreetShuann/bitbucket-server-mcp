@@ -13,11 +13,10 @@ Exposes three tools that map to different Bitbucket REST endpoints:
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     validate_path,
@@ -41,6 +40,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         at: str = "",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """Browse the file tree of a repository at a given path and revision.
 
@@ -51,6 +51,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             at: Optional branch name, tag, or commit ID (defaults to default branch).
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter (e.g. 'values.path.toString,values.type').
         """
         try:
             # Path traversal check runs before the path is interpolated into
@@ -65,7 +66,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             result = await client.get_paged(
                 api_path, params=params, start=start, limit=limit
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -110,6 +111,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         at: str = "",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List file paths in a repository directory (paginated).
 
@@ -122,6 +124,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             at: Optional branch name, tag, or commit ID (defaults to default branch).
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             validate_path(path)
@@ -134,7 +137,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             result = await client.get_paged(
                 api_path, params=params, start=start, limit=limit
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:

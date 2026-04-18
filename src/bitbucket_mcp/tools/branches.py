@@ -6,11 +6,10 @@ Exposes ``list_branches``, ``get_default_branch``, ``create_branch``, and
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     validate_project_key,
@@ -36,6 +35,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         filter_text: str = "",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List branches in a repository (paginated).
 
@@ -45,6 +45,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             filter_text: Optional text to filter branch names.
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter (e.g. 'values.displayId,values.latestCommit').
         """
         try:
             params: dict = {}
@@ -57,25 +58,26 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
             return f"Unexpected error: {e}"
 
     @mcp.tool()
-    async def get_default_branch(project_key: str, repo_slug: str) -> str:
+    async def get_default_branch(project_key: str, repo_slug: str, fields: str = "") -> str:
         """Get the default branch of a repository.
 
         Args:
             project_key: The project key.
             repo_slug: The repository slug.
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             result = await client.get(
                 f"{_repo_path(project_key, repo_slug)}/branches/default"
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -87,6 +89,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         repo_slug: str,
         name: str,
         start_point: str,
+        fields: str = "",
     ) -> str:
         """Create a new branch in a repository.
 
@@ -95,13 +98,14 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             repo_slug: The repository slug.
             name: Name for the new branch.
             start_point: Commit ID or branch name to branch from.
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             body = {"name": name, "startPoint": start_point}
             result = await client.post(
                 f"{_repo_path(project_key, repo_slug)}/branches", json_data=body
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -114,6 +118,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         filter_text: str = "",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List tags in a repository (paginated).
 
@@ -123,6 +128,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             filter_text: Optional text to filter tag names.
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             params: dict = {}
@@ -134,7 +140,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:

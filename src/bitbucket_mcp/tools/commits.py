@@ -6,11 +6,10 @@ Exposes ``list_commits``, ``get_commit``, ``get_commit_diff``, and
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     clamp_context_lines,
@@ -36,6 +35,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         path: str = "",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List commits in a repository (paginated), optionally filtered by branch or path.
 
@@ -47,6 +47,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             path: Optional file path to restrict commits to those affecting this path.
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter (e.g. 'values.id,values.message,values.author.name').
         """
         try:
             params: dict = {}
@@ -62,27 +63,30 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
             return f"Unexpected error: {e}"
 
     @mcp.tool()
-    async def get_commit(project_key: str, repo_slug: str, commit_id: str) -> str:
+    async def get_commit(
+        project_key: str, repo_slug: str, commit_id: str, fields: str = ""
+    ) -> str:
         """Get details of a specific commit.
 
         Args:
             project_key: The project key.
             repo_slug: The repository slug.
             commit_id: The full commit hash.
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             validate_commit_id(commit_id)
             result = await client.get(
                 f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}"
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -95,6 +99,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         commit_id: str,
         context_lines: int = 10,
         src_path: str = "",
+        fields: str = "",
     ) -> str:
         """Get the diff for a specific commit.
 
@@ -104,6 +109,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             commit_id: The full commit hash.
             context_lines: Number of context lines around changes (default 10, max 100).
             src_path: Optional path to restrict the diff to a specific file.
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             # validate_commit_id rejects non-hex input to prevent path injection.
@@ -116,7 +122,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 f"{_repo_path(project_key, repo_slug)}/commits/{commit_id}/diff",
                 params=params,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -129,6 +135,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         commit_id: str,
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """Get the list of files changed in a commit (paginated).
 
@@ -138,6 +145,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             commit_id: The full commit hash.
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             validate_commit_id(commit_id)
@@ -146,7 +154,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:

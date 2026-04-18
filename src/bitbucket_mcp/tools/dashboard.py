@@ -7,11 +7,10 @@ authenticated user's perspective, unlike the repo-scoped PR tools in
 
 from __future__ import annotations
 
-import json
-
 from mcp.server.fastmcp import FastMCP
 
 from bitbucket_mcp.client import BitbucketAPIError, BitbucketClient
+from bitbucket_mcp.fields import json_dumps
 from bitbucket_mcp.validation import (
     ValidationError,
     validate_pr_order,
@@ -29,6 +28,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         order: str = "NEWEST",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List pull requests visible to the authenticated user across all repositories (paginated).
 
@@ -41,6 +41,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             order: Sort order - 'OLDEST' or 'NEWEST' (default 'NEWEST').
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             state = validate_pr_state(state)
@@ -62,7 +63,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
@@ -73,6 +74,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
         role: str = "REVIEWER",
         start: int = 0,
         limit: int = 25,
+        fields: str = "",
     ) -> str:
         """List pull requests in the authenticated user's inbox (PRs needing review action).
 
@@ -83,6 +85,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
             role: Filter by role - typically 'REVIEWER' (default 'REVIEWER').
             start: Page start index (default 0).
             limit: Number of results per page (default 25).
+            fields: Optional Atlassian-style fields filter.
         """
         try:
             params: dict = {"role": validate_pr_role(role)}
@@ -92,7 +95,7 @@ def register_tools(mcp: FastMCP, client: BitbucketClient) -> None:
                 start=start,
                 limit=limit,
             )
-            return json.dumps(result, indent=2)
+            return json_dumps(result, fields, indent=2)
         except (BitbucketAPIError, ValidationError) as e:
             return f"Error: {e}"
         except Exception as e:
