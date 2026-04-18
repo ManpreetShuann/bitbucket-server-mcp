@@ -51,6 +51,7 @@ Set two required environment variables (plus optional ones):
 | `BITBUCKET_TOKEN` | Yes | HTTP access token (create in Bitbucket > User Settings > HTTP Access Tokens) |
 | `BITBUCKET_LOG_LEVEL` | No | Log level for stderr output: `DEBUG`, `INFO`, `WARNING`, `ERROR` (default: `INFO`) |
 | `BITBUCKET_CONVERT_TIMESTAMPS` | No | Set to `true` to convert Unix epoch millisecond timestamps (e.g. `createdDate`, `updatedDate`) to human-readable local-time strings (`yyyy-MM-dd HH:mm:ss`). Default: `false` (raw epoch values are returned). |
+| `BITBUCKET_SSL_VERIFY` | No | Set to `false` to disable SSL certificate verification (e.g. for self-signed certificates). Default: `true`. |
 | `BITBUCKET_ALLOW_DANGEROUS_DELETE` | No | Set to `1` to enable Tier-1 delete tools (branch, tag, PR, comment, task, attachment) |
 | `BITBUCKET_ALLOW_DESTRUCTIVE_DELETE` | No | Set to `1` to enable Tier-2 delete tools (project, repository). Requires `BITBUCKET_ALLOW_DANGEROUS_DELETE=1` |
 

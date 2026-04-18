@@ -11,6 +11,7 @@ parsing in one place, and makes it trivial to mock the network layer in tests.
 from __future__ import annotations
 
 import logging
+import os
 
 import httpx
 
@@ -35,6 +36,8 @@ class BitbucketAPIError(Exception):
 class BitbucketClient:
     def __init__(self, base_url: str, token: str):
         self.base_url = base_url.rstrip("/")
+        # Set BITBUCKET_SSL_VERIFY=false to disable SSL verification (e.g. for self-signed certificates).
+        ssl_verify: bool = os.environ.get("BITBUCKET_SSL_VERIFY", "true").strip().lower() != "false"
         # Setting base_url on the httpx client means every request path is
         # resolved relative to it, so tool modules only supply the REST path
         # segment (e.g. "/projects/KEY/repos").
@@ -48,6 +51,7 @@ class BitbucketClient:
                 "Accept": "application/json",
             },
             timeout=httpx.Timeout(30.0),
+            verify=ssl_verify,
         )
 
     async def get(self, path: str, params: dict | None = None) -> dict:
